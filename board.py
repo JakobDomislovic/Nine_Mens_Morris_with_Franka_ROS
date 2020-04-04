@@ -23,6 +23,16 @@ mouse_click_X = 0
 mouse_click_Y = 0
 
 
+# funkcija koja gleda koje smo polje htjeli oznaciti i je li to polje slobodno
+def check_position(x, y):
+    for k in position_on_board:
+        d = (position_on_board[k][0] - x)**2 + (position_on_board[k][1] - y)**2
+        if np.sqrt(d) <= PIECE_SIZE and not in closed_positions:
+            closed_positions[k] = position_on_board[k]
+            return position_on_board[k], True
+    return [0,0], False
+
+
 # Only for drawing lines on board
 def draw_lines_for_board(start, end):
     pygame.draw.line(screen, LINES, start, end, THICK)
