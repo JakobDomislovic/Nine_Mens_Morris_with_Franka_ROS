@@ -1,7 +1,8 @@
 from state_space import *
 import numpy as np
 import pygame
-
+import pygame.gfxdraw
+PLAYER = 'WHITE'
 
 # GUI settings
 WIDTH  = 900
@@ -18,6 +19,26 @@ mouse_click = False
 mouse_click_X = 0
 mouse_click_Y = 0
 
+# dict for closed positions 
+closed_positions = {}
+# za lakse nalazenje moguceg mlina
+white_positions  = {}
+black_positions  = {}
+WHITE_PIECES = 9
+BLACK_PIECES = 9
+
+all_pieces_list = pygame.sprite.Group() # pozivas kad oces sve uploadati na ekran
+white_pieces_list = pygame.sprite.Group()
+black_pieces_list = pygame.sprite.Group()
+
+# # funkcija koja gleda koje smo polje htjeli oznaciti i je li to polje slobodno
+# def check_position(x, y):
+#     for k in position_on_board:
+#         d = (position_on_board[k][0] - x)**2 + (position_on_board[k][y] - y)**2
+#         if d <= PIECE_SIZE**2 and not in closed_positions:
+#             closed_positions[k] = position_on_board[k]
+#             return position_on_board[k], True
+#     return [0,0], False
 
 
 
@@ -25,7 +46,6 @@ class Game_Board():
     
     def __init__(self):
         pygame.init()
-
         # Set up the drawing window
         self.screen = pygame.display.set_mode([WIDTH, HEIGHT])
         pygame.display.set_caption("Nine Men's Morris")
@@ -46,9 +66,10 @@ class Game_Board():
         # update changes on gui
         pygame.display.flip()
         
-        self.update_gui()
+        self.update_gui() # pozivam update gui fju koja je u stavri petlja do kad ne iskljucimo gui
 
     def update_gui(self):
+        global mouse_click
         self.running = True
         while self.running:
             for event in pygame.event.get():
@@ -58,12 +79,21 @@ class Game_Board():
                     self.mx, self.my = pygame.mouse.get_pos()
                     print self.mx, self.my
                     mouse_click = True
-        
-            #if mouse_click:
-            #    mouse_click = False
-            #    draw_piece([mx, my], 0)
-            #    pygame.display.flip()
 
+            all_pieces_list.draw(self.screen)
+
+            if PLAYER == 'WHITE' and mouse_click:
+                PLAYER == 'BLACK'
+                mouse_click = False
+                self.pos_for_piece, self.empty_spot = self.check_position(self.mx, self.my)
+                print(self.empty_spot)
+                if self.empty_spot:
+                    white = Piece(self.pos_for_piece, WHITE, BLACK)
+                    all_pieces_list.add(white)
+            #else:
+            # inace ide racunalo
+               #pygame.display.flip()
+        pygame.display.flip()
         pygame.quit()
     
     def draw_lines_for_board(self, start, end):
@@ -74,15 +104,33 @@ class Game_Board():
         pygame.draw.circle(self.screen, LINES, [(start[0]+end[0])/2, (start[1]+end[1])/2], 10)
 
 
+    # funkcija koja gleda koje smo polje htjeli oznaciti i je li to polje slobodno
+    def check_position(self, x, y):
+        for self.k in position_on_board:
+            print position_on_board[self.k], x, y
+            self.d = (position_on_board[self.k][0] - x)**2 + (position_on_board[self.k][0] - y)**2
+            print int(np.sqrt(self.d)), PIECE_SIZE
+            print(closed_positions)
+            if int(np.sqrt(self.d)) <= PIECE_SIZE and self.k not in closed_positions:
+                closed_positions[self.k] = position_on_board[self.k]
+                return position_on_board[self.k], True
+        return [0,0], False
+
+
 class Piece(pygame.sprite.Sprite):
 
     def __init__(self, position, color1, color2):
         pygame.sprite.Sprite.__init__(self)
 
-        self.image = self.draw_piece(position, color1, color2)
+        self.image = pygame.Surface((PIECE_SIZE, PIECE_SIZE), pygame.SRCALPHA)
+        pygame.gfxdraw.aacircle(self.image, position[0], position[1], PIECE_SIZE, color1)
+        self.rect = self.image.get_rect()
 
-    
+    def update(self):
+        # ovdje stavi naredbu kill u slucaju da trebas ubiti igraca
+        pass
+
     def draw_piece(self, position, color1, color2):
-            pygame.draw.circle(screen, color1, position, PIECE_SIZE, 0)
+            pygame.circle(screen, color1, position, PIECE_SIZE, 0)
             pygame.draw.circle(screen, color2, position, PIECE_SIZE, 1)
             pygame.draw.circle(screen, color2, position, PIECE_SIZE/2, 1)
