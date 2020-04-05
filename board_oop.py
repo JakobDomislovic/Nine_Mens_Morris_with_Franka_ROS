@@ -1,4 +1,4 @@
-from state_space import *
+from state_space_descriptor import *
 import numpy as np
 import pygame
 import random
@@ -234,7 +234,7 @@ class Game_Board():
                                 new_mill = True
                     
                     if k == 'e4' or k == 'f4' or k == 'g4':
-                        
+                        if 1 == 1: print(1)
                         else:
                             counter['4_right'] += 1
                             if counter['4_right'] == 3 and '4_right' not in white_mill_dict_helper:
