@@ -57,3 +57,22 @@ position_on_board = {
 }
 
 
+mill_combinations = [('a4', 'b4', 'c4'),\
+                     ('e4', 'f4', 'g4'),\
+                     ('d1', 'd2', 'd3'),\
+                     ('d5', 'd6', 'd7'),\
+                    # vanjski kvadrat
+                     ('a1', 'a4', 'a7'),\
+                     ('a7', 'd7', 'g7'),\
+                     ('g7', 'g4', 'g1'),\
+                     ('g1', 'd1', 'a1'),\
+                    # srednji kvadrat
+                     ('b2', 'b4', 'b6'),\
+                     ('b6', 'd6', 'f6'),\
+                     ('f6', 'f4', 'f2'),\
+                     ('f2', 'd2', 'b2'),\
+                    # unutarnji kvadrat
+                     ('c3', 'c4', 'c5'),\
+                     ('c5', 'd5', 'e5'),\
+                     ('e5', 'e4', 'e3'),\
+                     ('e3', 'd3', 'c3')]

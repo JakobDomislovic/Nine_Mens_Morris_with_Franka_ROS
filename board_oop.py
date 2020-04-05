@@ -33,11 +33,13 @@ closed_positions = {}
 
 # za lakse nalazenje moguceg mlina
 white_positions_taken  = {}
-black_positions_taken  = {}
 white_mill_dict = {}
 white_mill_dict_helper = {}
+black_positions_taken  = {}
 black_mill_dict = {}
 black_mill_dict_helper = {}
+# ovo su kratice gordnjih imena
+
 
 # globalno upravljaj brojem figura pojedinih boja
 WHITE_PIECES = 9
@@ -97,17 +99,21 @@ class Game_Board():
                 mouse_click = False
                 is_legal_move_made = self.make_move(self.PLAYER_ON_MOVE, [self.mx, self.my])
                 if is_legal_move_made:
-                    print('LEGALNO')
                     if self.is_mill(WHITE):
                         print('MLIN MLIN NMLI MLIN  MLIN')
                     self.PLAYER_ON_MOVE = BLACK
+                    print('Sljedeci na redu: {}'.format(self.PLAYER_ON_MOVE))
+                    print('Trenutni u bijelom mlinu: {}'.format(white_mill_dict))
             elif self.PLAYER_ON_MOVE == BLACK:
                 choose_place = input('Upisi poziciju za crnog: ')
                 if choose_place in position_on_board:
                     is_legal_move_made = self.make_move(self.PLAYER_ON_MOVE, position_on_board[choose_place])
                     if is_legal_move_made:
-                        # provjeri je li doslo do mlina
+                        if self.is_mill(BLACK):
+                            print('MLIN MLIN CRNI CRNI')
                         self.PLAYER_ON_MOVE = WHITE
+                    print('Sljedeci na redu: {}'.format(self.PLAYER_ON_MOVE))
+                    print('Trenutni u crnom mlinu: {}'.format(black_mill_dict))
 
             all_pieces_list.update()
             all_pieces_list.draw(self.screen)
@@ -136,15 +142,16 @@ class Game_Board():
             self.d = (position_on_board[self.k][0] - x)**2 + (position_on_board[self.k][1] - y)**2
             if ( int(np.sqrt(self.d)) <= PIECE_SIZE ) and ( self.k not in closed_positions ):
                 closed_positions[self.k] = position_on_board[self.k]
-                print(closed_positions)
+                print('Zauzeta mjesta: {}'.format(closed_positions.keys()))
                 return self.k, True
         return [0,0], False
+
 
     def make_move(self, player_color, position): # u class Piece isto imas position, NEMAJU VEZE JEDAN S DRUGIM
         '''
         radis poteze za svaku fazu
         '''
-        meta = True # varijabla za 
+        global WHITE_PIECES, BLACK_PIECES
         if self.NUMBER_OF_PIECES:  
             '''
             ako nemas zatvoreno barem 18 polja znaci da nisu svi igraci na ploci,
@@ -158,7 +165,7 @@ class Game_Board():
                     white_positions_taken[self.key] = position_on_board[self.key]
                     all_pieces_list.add(white)
                     white_pieces_list.add(white)
-                    self.PLAYER_ON_MOVE = BLACK
+                    #self.PLAYER_ON_MOVE = BLACK
                     self.NUMBER_OF_PIECES -= 1
                     return True # ako si napravio legalan potez vrati 'True'
                 else:
@@ -171,19 +178,19 @@ class Game_Board():
                     black_positions_taken[self.key] = position_on_board[self.key]
                     all_pieces_list.add(black)
                     black_pieces_list.add(black)
-                    self.PLAYER_ON_MOVE = WHITE
+                    #self.PLAYER_ON_MOVE = WHITE
                     self.NUMBER_OF_PIECES -= 1
                     return True # ako si napravio legalan potez vrati 'True'
                 else:
                     return False
 
-        elif player_color == WHITE and WHITE_PIECES > 3 and not NUMBER_OF_PIECES:
+        elif player_color == WHITE and WHITE_PIECES > 3 and not self.NUMBER_OF_PIECES:
             '''
             druga faza igrem samo za bijelog igraca
             '''
             print('slozi mlin majmune')
         
-        elif player_color == BLACK and BLACK_PIECES > 3 and not NUMBER_OF_PIECES:
+        elif player_color == BLACK and BLACK_PIECES > 3 and not self.NUMBER_OF_PIECES:
             '''
             druga faza samo za crnog igraca
             '''
@@ -196,103 +203,54 @@ class Game_Board():
 
 
     def is_mill(self, player_color):
+        '''
+        mlin javljas samo ako je doslo do NOVO NAPRAVLJENOG MLINA
+        zato cim naides na novi odma vracaj True jer nije moguce vise od jednog novog mlina 
+        '''
         print('usao')
-        counter = {}
-        cnt_d_low   = 0
-        cnt_d_high  = 0
-        cnt_4_left  = 0
-        cnt_4_right = 0
+        global white_mill_dict, white_mill_dict_helper
+        global black_mill_dict, black_mill_dict_helper
+
         new_mill = False
-        counter['4_left'], counter['4_right'] = 0, 0
+        
+        if player_color == WHITE:
+            wpt = white_positions_taken
+            wmh = white_mill_dict_helper
+            wmd = white_mill_dict
+        else:
+            wpt = black_positions_taken
+            wmd = black_mill_dict
+            wmh = black_mill_dict_helper
+
+
+        for i in mill_combinations:
+            if i[0] in wpt and i[1] in wpt and i[2] in wpt:
+                if i not in wmh:
+                    wmh[i] = True
+                    new_mill = True
+            elif i in wmh: del wmh[i]
+
+        for k in wmh:
+            for i in k:
+                wmd[i] = True
+
 
         if player_color == WHITE:
-            for k in white_positions_taken:
-                if k[0] == 'd':
-                    if k == 'd1' or k == 'd2' or k == 'd3':
-                        if 'd_low' not in counter: counter['d_low'] = 1
-                        else:
-                            counter['d_low'] += 1
-                            if counter['d_low'] == 3 and 'd_low' not in white_mill_dict_helper:
-                                white_mill_dict_helper['d_low'] = True
-                                new_mill = True
-                    
-                    if k == 'd5' or k == 'd6' or k == 'd7':
-                        if 'd_high' not in counter: counter['d_high'] = 1
-                        else:
-                            counter['d_high'] += 1
-                            if counter['d_high'] == 3 and 'd_high' not in white_mill_dict_helper:
-                                white_mill_dict_helper['d_high'] = True
-                                new_mill = True
-                
-                elif k[1] == 4:
-                    if k == 'a4' or k == 'b4' or k == 'c4':
-                        if '4_left' not in counter: counter['4_left'] = 1
-                        else:
-                            counter['4_left'] += 1
-                            if counter['4_left'] == 3 and '4_left' not in white_mill_dict_helper:
-                                white_mill_dict_helper['4_left'] = True
-                                new_mill = True
-                    
-                    if k == 'e4' or k == 'f4' or k == 'g4':
-                        if 1 == 1: print(1)
-                        else:
-                            counter['4_right'] += 1
-                            if counter['4_right'] == 3 and '4_right' not in white_mill_dict_helper:
-                                white_mill_dict_helper['4_right'] = True
-                                new_mill = True
-                else:
-                    if k[0] not in counter:
-                        counter[k[0]] = 1
-                    else:
-                        counter[k[0]] += 1
-                        if counter[k[0]] == 3 and k[0] not in white_mill_dict_helper: 
-                            white_mill_dict_helper[k[0]] = True
-                            new_mill = True
-                    if k[1] not in counter:
-                        counter[k[1]] = 1
-                    else:
-                        counter[k[1]] += 1
-                        if counter[k[1]] == 3 and k[1] not in white_mill_dict_helper:
-                            white_mill_dict_helper[k[1]] = True
-                            new_mill == True
+            white_mill_dict = wmd
+            white_mill_dict_helper = wmh
+        else:
+            black_mill_dict = wmd
+            black_mill_dict_helper = wmh
 
-            for k in white_mill_dict_helper:   # prolazimo kroz sve mlinove i gledamoo koji vise nisu mlinovi
-                if counter[k] < 3:
-                    del white_mill_dict_helper[k]
-            
-            for k in white_positions_taken:
-                if k[0] == 'd':
-                    if 'd_low' in white_mill_dict_helper:
-                        white_mill_dict['d1'] = True
-                        white_mill_dict['d2'] = True
-                        white_mill_dict['d3'] = True
-                    elif 'd_high' in white_mill_dict_helper:
-                        white_mill_dict['d5'] = True
-                        white_mill_dict['d6'] = True
-                        white_mill_dict['d7'] = True
-                
-                elif k[1] == '4':
-                    if '4_left' in white_mill_dict_helper:
-                        white_mill_dict['a4'] = True
-                        white_mill_dict['b4'] = True
-                        white_mill_dict['c4'] = True
-                    elif '4_right' in white_mill_dict_helper:
-                        white_mill_dict['e4'] = True
-                        white_mill_dict['f4'] = True
-                        white_mill_dict['g4'] = True
 
-                elif k[0] in white_mill_dict_helper:
-                    white_mill_dict[k] = True
-                elif k[1] in white_mill_dict_helper:
-                    white_mill_dict[k] = True
-
-            print(new_mill)
-            print(counter)
-            return new_mill
+        print(new_mill)
+        return new_mill
 
 
 
 
+# mozda da svakom spriteu saljes poziciju na polju tipa 'a1' iz ne izvuces koordinate, 
+# a svaki sprite ti onda ima i poziciju na polju
 
 class White_Piece(pygame.sprite.Sprite):
 
