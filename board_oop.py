@@ -74,9 +74,8 @@ class Game_Board():
         self.make_mill_move_white = False
         self.make_mill_move_black = False
         while self.running:
-            ########################################################################
+
             self.gui_settings()
-            ########################################################################
 
             # check for events
             for event in pygame.event.get():
@@ -95,6 +94,7 @@ class Game_Board():
                 mouse_click = False
                 is_legal_move_made = self.make_move(self.PLAYER_ON_MOVE, [self.mx, self.my])
                 if is_legal_move_made:
+                    print('Trenutni u bijelom mlinu: {}'.format(white_mill_dict.keys()))
                     if self.is_mill(WHITE):
                         self.make_mill_move_white = True
                         self.PLAYER_ON_MOVE = 0
@@ -121,6 +121,7 @@ class Game_Board():
                 if choose_place in position_on_board:
                     is_legal_move_made = self.make_move(self.PLAYER_ON_MOVE, position_on_board[choose_place])
                     if is_legal_move_made:
+                        print('Trenutno u crnom mlinu: {}'.format(black_mill_dict.keys()))
                         if self.is_mill(BLACK):
                             self.make_mill_move_black = True
                             self.PLAYER_ON_MOVE = 0
@@ -335,11 +336,80 @@ class Game_Board():
             return False
 
 
+        elif player_color == WHITE and WHITE_PIECES == 3 and not NUMBER_OF_PIECES:
+            '''
+            treca faza za bijelu figuricu
+            '''
+            for white_piece in white_pieces_list:
+                if white_piece.rect.collidepoint(position[0], position[1]):
+                    break
+
+            white_piece.tag()
+            all_pieces_list.draw(self.screen)
+            pygame.display.flip()
+
+            # ako je odabir figure dobar, odabrati mjesto za figuru
+            print('Odaberi novu lokaciju... bilo koju osim one na kojima je vec figurica')
+            while True:
+                for event in pygame.event.get():
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        new_x, new_y = pygame.mouse.get_pos()
+                        key, flag = self.check_position(new_x, new_y)
+                        if flag and key not in closed_positions:
+                                print('Nova odabrana pozicija je: {}'.format(key))
+                                # dodavanje novog spritea
+                                white_piece.kill_it()
+                                new_white = White_Piece(key)
+                                white_pieces_list.add(new_white)
+                                all_pieces_list.add(new_white)
+                                
+                                all_pieces_list.update()
+                                all_pieces_list.draw(self.screen)
+                                self.gui_settings()
+                                pygame.display.flip()
+                                
+                                del closed_positions[white_piece.key]
+                                del white_positions_taken[white_piece.key]
+                                closed_positions[key] = position_on_board[key]
+                                white_positions_taken[key] = position_on_board[key]
+                                print('Bijele zauzete pozicije: {}'.format(white_positions_taken.keys()))
+                                return True
+
+            return False
+
         else:
-            '''
-            treca faza moze biti samo ako nije ni jedna druga
-            '''
-            pass
+            for black_piece in black_pieces_list:
+                if black_piece.rect.collidepoint(position[0], position[1]):
+                    break
+
+            black_piece.tag()
+            all_pieces_list.draw(self.screen)
+            pygame.display.flip()
+
+            print('Odaberi lokaciju kamo ces premjestiti figuru.')
+            while True:
+                new_location = input('Upisi novu lokaciju: ')
+                key, flag = self.check_position(position_on_board[new_location][0], position_on_board[new_location][1])
+                if flag and key not in closed_positions:
+                    print('Nova odabrana pozicija je: {}'.format(key))
+                    black_piece.kill_it()
+                    new_black = Black_Piece(key)
+                    black_pieces_list.add(new_black)
+                    all_pieces_list.add(new_black)
+
+                    all_pieces_list.update()
+                    all_pieces_list.draw(self.screen)
+                    self.gui_settings()
+                    pygame.display.flip()
+
+                    del closed_positions[black_piece.key]
+                    del black_positions_taken[black_piece.key]
+                    closed_positions[key] = position_on_board[key]
+                    black_positions_taken[key] = position_on_board[key]
+                    print('Crne zauzete pozicije: {}'.format(black_positions_taken.keys()))
+                    return True
+            
+            return False
 
 
     def is_mill(self, player_color):
