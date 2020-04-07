@@ -33,7 +33,7 @@ closed_positions = {}
 
 # za lakse nalazenje moguceg mlina
 white_positions_taken  = {}
-white_mill_dict = {}            # sve mill_dictove napravi kao set, u ovom slucaju ti bolje
+white_mill_dict = {}            # sve mill_dictove napravi kao set, u ovom slucaju ti bolje !!!
 white_mill_dict_helper = {}
 black_positions_taken  = {}
 black_mill_dict = {}
@@ -425,13 +425,14 @@ class Game_Board():
 
         if player_color == WHITE:
             wpt = white_positions_taken
+            #wmd = white_mill_dict
             wmh = white_mill_dict_helper
-            wmd = white_mill_dict
         else:
             wpt = black_positions_taken
-            wmd = black_mill_dict
+            #wmd = black_mill_dict
             wmh = black_mill_dict_helper
 
+        wmd = {}
 
         for i in mill_combinations:
             if i[0] in wpt and i[1] in wpt and i[2] in wpt:
