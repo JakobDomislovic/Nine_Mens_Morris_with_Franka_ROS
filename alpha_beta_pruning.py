@@ -4,6 +4,52 @@ from heuristics import number_of_pieces_heuristic, first_stage_heuristics
 
 import copy
 
+
+def is_Mill(color, move):
+    
+    for mill in mill_combinations:
+        help2 = set()
+        
+        for t in mill: help2.add(t)
+        
+        if move in help2 and help2.issubset(color):
+            return True
+
+    return False 
+
+
+def is_Terminal(board, player, white, black):
+
+    if player:
+        
+        if len(white) < 3 and len(board) >= 5:  # minimalno na ploci moze biti 5 igraca
+            return True
+        
+        else: 
+            return False
+        
+        for k in white:
+            for i in state_space[k]:
+                if i not in board:
+                    return False
+        
+        return True
+
+    else:
+        
+        if len(black) < 3 and len(board) >= 5: # minimalno na ploci moze biti 5 igraca
+            return True
+        
+        else:
+            return False
+        
+        for k in black:
+            for i in state_space[k]:
+                if i not in board:
+                    return False
+        
+        return True
+
 '''
 board - current state of board
 depth - depth of search
@@ -137,6 +183,8 @@ def alpha_beta(board, depth, max_player, alpha, beta, white_pieces, black_pieces
 
 def possible_moves_list(board_x, black_x, white_x, max_player, stage):
     
+    # razmisli treba li ti uopce 'deepcopy', to je O(n)
+
     not_in_mill = set()
     board = copy.deepcopy(board_x)
     
@@ -147,11 +195,13 @@ def possible_moves_list(board_x, black_x, white_x, max_player, stage):
     in_mill_flag_list = []
 
     if max_player:
+        
         first_col = copy.deepcopy(black_x)
         second_col = copy.deepcopy(white_x)
 
         initial_second = copy.deepcopy(white_x)
         help4 = set()
+
         for m in mill_combinations:
             help1 = set()
             for t in m: help1.add(t)
@@ -161,11 +211,13 @@ def possible_moves_list(board_x, black_x, white_x, max_player, stage):
                     help4.add(i)
 
     else:
+        
         first_col = copy.deepcopy(white_x)
         second_col = copy.deepcopy(black_x)
  
         initial_second = copy.deepcopy(black_x)
         help4 = set()
+
         for m in mill_combinations:
             help1 = set()
             for t in m: help1.add(t)
@@ -176,69 +228,137 @@ def possible_moves_list(board_x, black_x, white_x, max_player, stage):
                     
     not_in_mill.difference_update(help4)
     
-    for move in state_space.keys():
+    if stage == 1:
         
-        if move in board: continue
+        for move in state_space.keys():
 
-        first_col_list.append(first_col.union({move}))
+            if move in board: continue
+
+            help2 = set()
+            help2 = first_col.union({move})
+
+            first_col_list.append(help2)
+
+            if not_in_mill and is_Mill(help2, move):
+
+                for fig in not_in_mill:
+
+                    in_mill_flag_list.append(True)
+
+                    help_set = set()
+                    help_set = board.union({move})
+                    help_set.difference_update({fig})
+                    board_list.append(help_set)
+
+                    second_col_list.append(second_col.difference({fig}))
+                    first_col_list.append(first_col_list[-1])
+
+                first_col_list.pop() # jednog viska si dodao jer prije if is_Mill radil dodavanje
+                continue
+
+            board_list.append(board.union({move}))
+            second_col_list.append(initial_second)
+            in_mill_flag_list.append(False)
+
+        return zip(board_list, first_col_list, second_col_list, in_mill_flag_list)
+
+    
+    elif stage == 2:
         
-        if not_in_mill and is_Mill(first_col.union({move}), move):
+        move_figure = []
+
+        for figure in first_col:
+           
+            help_board = board.difference({figure})
+            help_first_col = first_col.difference({figure})
             
-            for fig in not_in_mill:
+            for adjacent in state_space[figure]:
                 
-                in_mill_flag_list.append(True)
-                
-                help_set = set()
-                help_set = board.union({move})
-                help_set.difference_update({fig})
-                board_list.append(help_set)
+                if adjacent in board: continue
 
-                second_col_list.append(second_col.difference({fig}))
-                first_col_list.append(first_col_list[-1])
+                move_figure.append(figure)
+
+                help2 = set()
+                help2 = help_first_col.union({adjacent})
+                
+                first_col_list.append(help2)
+
+                if not_in_mill and is_Mill(help2, adjacent):
+
+                    for fig in not_in_mill:
+
+                        in_mill_flag_list.append(True)
+
+                        help_set = set()
+                        help_set = help_board.union({adjacent})
+                        help_set.difference_update({fig})
+                        board_list.append(help_set)
+
+                        second_col_list.append(second_col.difference({fig}))
+                        first_col_list.append(first_col_list[-1])
+
+                    first_col_list.pop()
+                    continue
+
+                board_list.append(help_board.union({adjacent}))
+                second_col_list.append(initial_second)
+                in_mill_flag_list.append(False)
+
+        return zip(board_list, first_col_list, second_col_list, in_mill_flag_list, move_figure)
+
+
+    else: # stage 3, similar to stage 2
+        
+        move_figure = []
+
+        for figure in first_col:
+           
+            help_board = board.difference({figure})
+            help_first_col = first_col.difference({figure})
             
-            first_col_list.pop() # jednog viska si dodao jer prije if is_Mill
-            continue
+            for move in state_space.keys(): # only difference between stage 2 and 3 is that in stage 3 we can move on any free field
+                
+                if move in board: continue
 
-        board_list.append(board.union({move}))
-        second_col_list.append(initial_second)
-        in_mill_flag_list.append(False)
+                move_figure.append(figure)
 
-    return zip(board_list, first_col_list, second_col_list, in_mill_flag_list)
+                help2 = set()
+                help2 = help_first_col.union({move})
+                
+                first_col_list.append(help2)
 
+                if not_in_mill and is_Mill(help2, move):
 
-def is_Mill(color, move):
+                    for fig in not_in_mill:
+
+                        in_mill_flag_list.append(True)
+
+                        help_set = set()
+                        help_set = help_board.union({move})
+                        help_set.difference_update({fig})
+                        board_list.append(help_set)
+
+                        second_col_list.append(second_col.difference({fig}))
+                        first_col_list.append(first_col_list[-1])
+
+                    first_col_list.pop()
+                    continue
+
+                board_list.append(help_board.union({move}))
+                second_col_list.append(initial_second)
+                in_mill_flag_list.append(False)
         
-    for mill in mill_combinations:
-        help2 = set()
-        
-        for t in mill: help2.add(t)
-        
-        if move in help2 and help2.issubset(color):
-            return True
-
-    return False 
+        return zip(board_list, first_col_list, second_col_list, in_mill_flag_list, move_figure)
 
 
-def is_Terminal(board, player, white, black):
-    # checks whether we reached the terminal state
-    if player:
-        if len(white) < 3 and len(board) >= 5:  # minimalno na ploci moze biti 5 igraca
-            return True
-        else: 
-            return False
-        for k in white:
-            for i in state_space[k]:
-                if i not in board:
-                    return False
-        return True
+# testiranja
+#for i in possible_moves_list({'a1', 'a4', 'd1', 'b4', 'b6'}, {'b4', 'b6', 'd2'}, {'a1', 'a4', 'd1'}, True, 3):
+#    print('\nboard: {}'.format(i[0]))
+#    print('black: {}'.format(i[1]))
+#    print('white: {}'.format(i[2]))
+#    print('in mill: {}'.format(i[3]))
+#    print('move figure: {}\n'.format(i[4]))
 
-    else:
-        if len(black) < 3 and len(board) >= 5: # minimalno na ploci moze biti 5 igraca
-            return True
-        else:
-            return False
-        for k in black:
-            for i in state_space[k]:
-                if i not in board:
-                    return False
-        return True
+
+
+
