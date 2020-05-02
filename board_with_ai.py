@@ -201,7 +201,7 @@ class Game_Board():
 
                 if self.NUMBER_OF_PIECES > 0:
                     # in first stage we only put pieces down, we are never moving them
-
+                    print('Prva faza crni')
                     new_move, evaluation_value, figure_to_kill, _ = alpha_beta(board, 2, True, float('-inf'),float('inf'),
                                                                                            white_pieces, black_pieces, self.NUMBER_OF_PIECES)
                     print(figure_to_kill)
@@ -210,9 +210,11 @@ class Game_Board():
                     time.sleep(1) # pauzira se program na sekundu da se bolje vidi stavljanje figure i ubijanje
 
                 else:
-                    print('Druga faza')
+                    if self.BLACK_PIECES > 3: print('Druga faza crni')
+                    else: print('Treca faza crni')
                     new_move, evaluation_value, figure_to_kill, new_place = alpha_beta(board, 2, True, float('-inf'),float('inf'),
                                                                                            white_pieces, black_pieces, self.NUMBER_OF_PIECES)
+                    print('Move: {}\nNew place: {}'.format(new_move, new_place))
                     self.trash = self.make_move(self.PLAYER_ON_MOVE, position_on_board[new_move], 1, new_place)
 
                 if figure_to_kill:
