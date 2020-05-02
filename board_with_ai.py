@@ -202,7 +202,7 @@ class Game_Board():
                 if self.NUMBER_OF_PIECES > 0:
                     # in first stage we only put pieces down, we are never moving them
 
-                    new_move, evaluation_value, figure_to_kill, _ = alpha_beta(board, 3, True, float('-inf'),float('inf'),
+                    new_move, evaluation_value, figure_to_kill, _ = alpha_beta(board, 1, True, float('-inf'),float('inf'),
                                                                                            white_pieces, black_pieces, self.NUMBER_OF_PIECES)
 
                     self.trash = self.make_move(self.PLAYER_ON_MOVE, position_on_board[new_move], 1, None)

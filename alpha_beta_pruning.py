@@ -28,7 +28,7 @@ def alpha_beta(board, depth, max_player, alpha, beta, white_pieces, black_pieces
         else: return None, -10000, None, None
 
     if depth == 0:
-        return None, first_stage_heuristics(black_pieces, white_pieces, max_player), None, None
+        return None, number_of_pieces_heuristic(black_pieces, white_pieces, max_player), None, None
 
     ##################### possible moves for every stage of the game ####################
     
@@ -62,13 +62,11 @@ def alpha_beta(board, depth, max_player, alpha, beta, white_pieces, black_pieces
                 
                 print(current_evaluation_max, from_min)
                 
-                #current_evaluation = max(current_evaluation, from_min)
                 
-                # provjera MAX
+                # -------------------------------------provjera MAX
                 if current_evaluation_max >= from_min:
                     current_evaluation_max = current_evaluation_max
                     current_move_max = move
-                    #current_move = move
                 else:
                     print('NEW MAX')
                     current_evaluation_max = from_min
@@ -78,7 +76,7 @@ def alpha_beta(board, depth, max_player, alpha, beta, white_pieces, black_pieces
                 if flag1: 
                     print('in flag')
                     current_move_max = max_move
-                # kraj provjere max
+                # -------------------------------------kraj provjere max
 
                 # alpha-beta pruning
                 if current_evaluation_max >= beta: 
@@ -105,15 +103,14 @@ def alpha_beta(board, depth, max_player, alpha, beta, white_pieces, black_pieces
 
                 print('MOVE: {}'.format(move))
 
-                # trebas provjeriti je li doslo do mlina
-
+                
                 _, from_max, _, _ = alpha_beta(board_help, depth-1, True, alpha, current_evaluation_min,
                                                 white_pieces_help, black_pieces, number_of_pieces-1)
                 print(current_evaluation_min, from_max)
                 
                 #current_evaluation = min(current_evaluation, from_max)
 
-                # provjera MIN
+                # -------------------------------------provjera MIN
                 if current_evaluation_min <= from_max:
                     current_evaluation_min = current_evaluation_min
                     current_move_min = move
@@ -122,7 +119,7 @@ def alpha_beta(board, depth, max_player, alpha, beta, white_pieces, black_pieces
                     current_evaluation_min = from_max
                     min_move = move
                     flag2 = True
-                # kraj provjere MIN
+                # -------------------------------------kraj provjere MIN
                 if flag2: 
                     print('in min flag')
                     current_move_min = min_move
@@ -170,3 +167,4 @@ def is_Terminal(board, player, white, black):
                     return False
         return True
     
+
