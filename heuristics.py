@@ -1,7 +1,7 @@
 
 
 def number_of_pieces_heuristic(black, white, max_player):
-    print('in heuristics')
+    #print('in heuristics')
     return (len(black) - len(white)) * 100
     #if max_player:
     #    return len(black) * (-10)

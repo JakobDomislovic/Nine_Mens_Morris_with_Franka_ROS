@@ -202,9 +202,9 @@ class Game_Board():
                 if self.NUMBER_OF_PIECES > 0:
                     # in first stage we only put pieces down, we are never moving them
 
-                    new_move, evaluation_value, figure_to_kill, _ = alpha_beta(board, 1, True, float('-inf'),float('inf'),
+                    new_move, evaluation_value, figure_to_kill, _ = alpha_beta(board, 2, True, float('-inf'),float('inf'),
                                                                                            white_pieces, black_pieces, self.NUMBER_OF_PIECES)
-
+                    print(figure_to_kill)
                     self.trash = self.make_move(self.PLAYER_ON_MOVE, position_on_board[new_move], 1, None)
 
                     time.sleep(1) # pauzira se program na sekundu da se bolje vidi stavljanje figure i ubijanje
@@ -216,6 +216,7 @@ class Game_Board():
                     self.trash = self.make_move(self.PLAYER_ON_MOVE, position_on_board[new_move], 1, new_place)
 
                 if figure_to_kill:
+                    print('AI MILL IS MADE: {}'.format(figure_to_kill))
                     self.kill_piece(BLACK, figure_to_kill)
                 
                 self.PLAYER_ON_MOVE = WHITE
