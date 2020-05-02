@@ -118,6 +118,7 @@ def alpha_beta(board, depth, max_player, alpha, beta, white_pieces, black_pieces
                 if current_evaluation_max >= from_min:
                     current_evaluation_max = current_evaluation_max
                     current_move_max = move
+                    flag1 = False
 
                 else:
                     if is_Mill_move:
@@ -198,6 +199,8 @@ def alpha_beta(board, depth, max_player, alpha, beta, white_pieces, black_pieces
                 if current_evaluation_max >= from_min:
                     current_evaluation_max = current_evaluation_max
                     current_move_max = move
+                    new_place_4_fig = new_board.difference(board)
+                    flag1 = False
 
                 else:
                     if is_Mill_move:
@@ -208,7 +211,8 @@ def alpha_beta(board, depth, max_player, alpha, beta, white_pieces, black_pieces
                     max_move = move
                     flag1 = True
                 
-                if flag1: 
+                if flag1:
+                    current_new_place = new_place_4_fig.pop()
                     current_move_max = max_move
                 # -------------------------------------kraj provjere max
 
@@ -217,8 +221,8 @@ def alpha_beta(board, depth, max_player, alpha, beta, white_pieces, black_pieces
                     return current_move_max, beta, None, None
             
             print(current_move_max, new_place_4_fig)
-            if mill_flag_black: return current_move_max, current_evaluation_max, mill_move_black, new_place_4_fig.pop()
-            else: return current_move_max, current_evaluation_max, None, new_place_4_fig.pop()
+            if mill_flag_black: return current_move_max, current_evaluation_max, mill_move_black, current_new_place
+            else: return current_move_max, current_evaluation_max, None, current_new_place
 
         else: # if not max_player
 
@@ -239,6 +243,8 @@ def alpha_beta(board, depth, max_player, alpha, beta, white_pieces, black_pieces
                 if current_evaluation_min <= from_max:
                     current_evaluation_min = current_evaluation_min
                     current_move_min = move
+                    new_place_4_fig = new_board.difference(board)
+                    flag2 = False
 
                 else:
                     current_evaluation_min = from_max
@@ -246,7 +252,7 @@ def alpha_beta(board, depth, max_player, alpha, beta, white_pieces, black_pieces
                     new_place_4_fig = new_board.difference(board)
                     flag2 = True
 
-                if flag2: 
+                if flag2:
                     current_move_min = min_move
                 # -------------------------------------kraj provjere MIN
                 
@@ -426,6 +432,7 @@ def possible_moves_list(board_x, black_x, white_x, max_player, stage):
     elif stage == 2:
         
         move_figure = []
+        new_place = []
 
         for figure in first_col:
            
@@ -437,6 +444,7 @@ def possible_moves_list(board_x, black_x, white_x, max_player, stage):
                 if adjacent in board: continue
 
                 move_figure.append(figure)
+                new_place.append(adjacent)
 
                 help2 = set()
                 help2 = help_first_col.union({adjacent})
@@ -456,20 +464,25 @@ def possible_moves_list(board_x, black_x, white_x, max_player, stage):
 
                         second_col_list.append(second_col.difference({fig}))
                         first_col_list.append(first_col_list[-1])
+                        move_figure.append(move_figure[-1])
+                        new_place.append(new_place[-1])
 
                     first_col_list.pop()
+                    move_figure.pop()
+                    new_place.pop()
                     continue
 
                 board_list.append(help_board.union({adjacent}))
                 second_col_list.append(initial_second)
                 in_mill_flag_list.append(False)
 
-        return zip(board_list, first_col_list, second_col_list, in_mill_flag_list, move_figure)
+        return zip(board_list, first_col_list, second_col_list, in_mill_flag_list, move_figure, new_place)
 
 
     else: # stage 3, similar to stage 2
         
         move_figure = []
+        new_place = []
 
         for figure in first_col:
            
@@ -481,6 +494,7 @@ def possible_moves_list(board_x, black_x, white_x, max_player, stage):
                 if move in board: continue
 
                 move_figure.append(figure)
+                new_place.append(move)
 
                 help2 = set()
                 help2 = help_first_col.union({move})
@@ -500,24 +514,30 @@ def possible_moves_list(board_x, black_x, white_x, max_player, stage):
 
                         second_col_list.append(second_col.difference({fig}))
                         first_col_list.append(first_col_list[-1])
+                        move_figure.append(move_figure[-1])
+                        new_place.append(new_place[-1])
 
                     first_col_list.pop()
+                    move_figure.pop()
+                    new_place.pop()
                     continue
 
                 board_list.append(help_board.union({move}))
                 second_col_list.append(initial_second)
                 in_mill_flag_list.append(False)
 
-        return zip(board_list, first_col_list, second_col_list, in_mill_flag_list, move_figure)
+        return zip(board_list, first_col_list, second_col_list, in_mill_flag_list, move_figure, new_place)
 
 
 # testiranja
-#for i in possible_moves_list({'a1', 'a4', 'd1', 'b4', 'b6'}, {'b4', 'b6', 'd2'}, {'a1', 'a4', 'd1'}, True, 3):
+#for i in possible_moves_list({'a1', 'a4', 'd2','g7', 'g4', 'd1'}, {'g7', 'g4', 'd1'}, {'a1', 'a4', 'd2'}, True, 3):
 #    print('\nboard: {}'.format(i[0]))
 #    print('black: {}'.format(i[1]))
 #    print('white: {}'.format(i[2]))
 #    print('in mill: {}'.format(i[3]))
-#    print('move figure: {}\n'.format(i[4]))
+#    print('move figure: {}'.format(i[4]))
+#    print('new place: {}\n'.format(i[5]))
+
 
 
 
