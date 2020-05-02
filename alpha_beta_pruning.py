@@ -1,6 +1,6 @@
 from state_space_descriptor import state_space, position_on_board, mill_combinations
 
-from heuristics import number_of_pieces_heuristic
+from heuristics import number_of_pieces_heuristic, first_stage_heuristics
 
 
 '''
@@ -28,7 +28,7 @@ def alpha_beta(board, depth, max_player, alpha, beta, white_pieces, black_pieces
         else: return None, -10000, None, None
 
     if depth == 0:
-        return None, number_of_pieces_heuristic(black_pieces, white_pieces), None, None
+        return None, first_stage_heuristics(black_pieces, white_pieces, max_player), None, None
 
     ##################### possible moves for every stage of the game ####################
     
@@ -36,18 +36,18 @@ def alpha_beta(board, depth, max_player, alpha, beta, white_pieces, black_pieces
         '''
             FIRST STAGE
         '''
-        print('first stage')
         
         # set of empty fields
         possible_moves = set(state_space.keys())
-        possible_moves.difference_update(board) 
+        possible_moves.difference_update(board)
         
         if max_player:
-
-            current_evaluation = alpha
-
+            
+            current_evaluation_max = alpha
+            
+            flag1 = False
             for move in possible_moves:
-                
+                print('IN MAX')
                 board_help = set()
                 board_help = board.union({move})
                 
@@ -55,23 +55,47 @@ def alpha_beta(board, depth, max_player, alpha, beta, white_pieces, black_pieces
                 black_pieces_help = black_pieces.union({move})
                 
                 # trebas provjeriti je li doslo do mlina
-                # ako je doslo do mlina moras vratiti koju figuru ubiti 
-
-                _ , from_min, _, _ = alpha_beta(board_help, depth-1, False, current_evaluation, beta,
+                
+                print('MAX MOVE: {}'.format(move))
+                _ , from_min, _, _ = alpha_beta(board_help, depth-1, False, current_evaluation_max, beta,
                                                 white_pieces, black_pieces_help, number_of_pieces-1)
                 
-                current_evaluation = max(current_evaluation, from_min)
+                print(current_evaluation_max, from_min)
                 
+                #current_evaluation = max(current_evaluation, from_min)
+                
+                # provjera MAX
+                if current_evaluation_max >= from_min:
+                    current_evaluation_max = current_evaluation_max
+                    current_move_max = move
+                    #current_move = move
+                else:
+                    print('NEW MAX')
+                    current_evaluation_max = from_min
+                    max_move = move
+                    flag1 = True
+                
+                if flag1: 
+                    print('in flag')
+                    current_move_max = max_move
+                # kraj provjere max
+
                 # alpha-beta pruning
-                if current_evaluation >= beta: return move, beta, None, None
-            
-            return move, current_evaluation, None, None
+                if current_evaluation_max >= beta: 
+                    print('Beta pruning---------start')
+                    print(current_move_max, current_evaluation_max, alpha, beta)
+                    print('Beta pruning---------end')
+                    return current_move_max, beta, None, None
+                    
+            print(current_move_max, current_evaluation_max, alpha, beta)
+            return current_move_max, current_evaluation_max, None, None
 
         else: # if not max_player
-
-            current_evaluation = beta
-
+            current_evaluation_min = beta
+            
+            flag2 = False
             for move in possible_moves:
+                print('IN MIN')
                 
                 board_help = set()
                 board_help = board.union({move})
@@ -79,17 +103,39 @@ def alpha_beta(board, depth, max_player, alpha, beta, white_pieces, black_pieces
                 white_pieces_help = set()
                 white_pieces_help = white_pieces.union({move})
 
+                print('MOVE: {}'.format(move))
+
                 # trebas provjeriti je li doslo do mlina
 
-                _, from_max, _, _ = alpha_beta(board_help, depth-1, True, alpha, current_evaluation,
+                _, from_max, _, _ = alpha_beta(board_help, depth-1, True, alpha, current_evaluation_min,
                                                 white_pieces_help, black_pieces, number_of_pieces-1)
+                print(current_evaluation_min, from_max)
                 
-                current_evaluation = min(current_evaluation, from_max)
-               
+                #current_evaluation = min(current_evaluation, from_max)
+
+                # provjera MIN
+                if current_evaluation_min <= from_max:
+                    current_evaluation_min = current_evaluation_min
+                    current_move_min = move
+                else:
+                    print('NEW MIN')
+                    current_evaluation_min = from_max
+                    min_move = move
+                    flag2 = True
+                # kraj provjere MIN
+                if flag2: 
+                    print('in min flag')
+                    current_move_min = min_move
+                
                 # alpha-beta pruning
-                if current_evaluation <= alpha: return move, alpha, None, None
-            
-            return move, current_evaluation, None, None
+                if current_evaluation_min <= alpha: 
+                    print('Alpha pruning---------start')
+                    print(current_move_min, current_evaluation_min, alpha, beta)
+                    print('Alpha pruning---------end')
+                    return current_move_min, alpha, None, None
+                
+            print(current_move_min, current_evaluation_min, alpha, beta)
+            return current_move_min, current_evaluation_min, None, None
 
     else:
         '''

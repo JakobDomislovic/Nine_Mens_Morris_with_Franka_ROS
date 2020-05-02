@@ -198,9 +198,6 @@ class Game_Board():
                 board = set(self.closed_positions.keys())
                 black_pieces = set(self.black_positions_taken.keys())
                 white_pieces = set(self.white_positions_taken.keys())
-                print(board)
-                print(black_pieces)
-                print(white_pieces)
 
                 if self.NUMBER_OF_PIECES > 0:
                     # in first stage we only put pieces down, we are never moving them
