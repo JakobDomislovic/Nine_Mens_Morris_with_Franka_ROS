@@ -198,14 +198,19 @@ class Game_Board():
                 board = set(self.closed_positions.keys())
                 black_pieces = set(self.black_positions_taken.keys())
                 white_pieces = set(self.white_positions_taken.keys())
+                
+                #print(list(board))
+                #print(list(black_pieces))
+                #print(list(white_pieces))
 
                 if self.NUMBER_OF_PIECES > 0:
                     # in first stage we only put pieces down, we are never moving them
                     print('Prva faza crni')
-                    new_move, evaluation_value, figure_to_kill, _ = alpha_beta(board, 2, True, float('-inf'),float('inf'),
+                    new_move, evaluation_value, figure_to_kill, _ = alpha_beta(board, 4, True, float('-inf'),float('inf'),
                                                                                            white_pieces, black_pieces, self.NUMBER_OF_PIECES)
-                    print(figure_to_kill)
-                    print(new_move, figure_to_kill)
+                    
+                    print('Move: {}\nFigure to kill: {}'.format(new_move, figure_to_kill))
+
                     self.trash = self.make_move(self.PLAYER_ON_MOVE, position_on_board[new_move], 1, None)
 
                     time.sleep(1) # pauzira se program na sekundu da se bolje vidi stavljanje figure i ubijanje
@@ -213,19 +218,22 @@ class Game_Board():
                 else:
                     if self.BLACK_PIECES > 3: print('Druga faza crni')
                     else: print('Treca faza crni')
-                    new_move, evaluation_value, figure_to_kill, new_place = alpha_beta(board, 2, True, float('-inf'),float('inf'),
+                    new_move, evaluation_value, figure_to_kill, new_place = alpha_beta(board, 4, True, float('-inf'),float('inf'),
                                                                                            white_pieces, black_pieces, self.NUMBER_OF_PIECES)
                     print('Move: {}\nNew place: {}\nFigure to kill: {}'.format(new_move, new_place, figure_to_kill))
                     self.trash = self.make_move(self.PLAYER_ON_MOVE, position_on_board[new_move], 1, new_place)
 
                 if figure_to_kill:
-                    print('AI MILL IS MADE: {}'.format(figure_to_kill))
                     self.kill_piece(BLACK, figure_to_kill)
                 
                 self.PLAYER_ON_MOVE = WHITE
                 self.trash = self.is_mill(WHITE)
+                self.trash = self.is_mill(BLACK)
                 # na kraju postavljas da igra bijeli igrac
                 print('\nWhite player on turn.')
+                if self.NUMBER_OF_PIECES: print('PRVA FAZA BIJELI:')
+                elif not self.NUMBER_OF_PIECES and self.WHITE_PIECES > 3: print('DRUGA FAZA BIJELI. upisi prvo poziciju koju zelis pomaknuti onda kamo pomaknuti')
+                else: print('Treca faza, klinki prvo poziciju kojeg zelis maknuti onda kamo.')
 
 
 
@@ -236,13 +244,16 @@ class Game_Board():
             # provjera je li doslo do kraja igre
             if self.white_positions_taken and not self.NUMBER_OF_PIECES and self.no_legal_moves_game_loss(WHITE) or self.WHITE_PIECES < 3:
                 print('Black wins.')
+                time.sleep(5)
                 pygame.quit()
             if self.black_positions_taken and not self.NUMBER_OF_PIECES and self.no_legal_moves_game_loss(BLACK) or self.BLACK_PIECES < 3:
                 print('White wins.')
+                time.sleep(5)
                 pygame.quit()
             # nerijeseno ispitaj jesi li u fazi dva  ili tri i sve figure koje postoje su u mlinu
             # TODO: check_draw
-
+        
+        time.sleep(5)
         pygame.quit()
         print(self.closed_positions.keys())
 
@@ -402,7 +413,7 @@ class Game_Board():
                 if mode == 2: new_location = input('Upisi novu lokaciju: ')
                 else: 
                     new_location = new_loc
-                    time.sleep(1) # pauzira se program na sekundu da se bolje vidi stavljanje figure i ubijanje
+                    time.sleep(2) # pauzira se program na sekundu da se bolje vidi stavljanje figure i ubijanje
 
                 key, flag = self.check_position(position_on_board[new_location][0], position_on_board[new_location][1])
                 
@@ -485,7 +496,7 @@ class Game_Board():
                 if mode == 2: new_location = input('Put new location: ')
                 else:
                     new_location = new_loc
-                    time.sleep(1)
+                    time.sleep(2)
 
                 key, flag = self.check_position(position_on_board[new_location][0], position_on_board[new_location][1])
                 
@@ -671,7 +682,7 @@ class White_Piece(pygame.sprite.Sprite):
         self.kill()
 
     def tag(self):
-        pygame.draw.circle(self.image, (128,0,128), (PIECE_SIZE,PIECE_SIZE), PIECE_SIZE, 5)
+        pygame.draw.circle(self.image, (170,0,170), (PIECE_SIZE,PIECE_SIZE), PIECE_SIZE, 5)
 
 
 class Black_Piece(pygame.sprite.Sprite):
@@ -702,4 +713,4 @@ class Black_Piece(pygame.sprite.Sprite):
         self.kill()
 
     def tag(self):
-        pygame.draw.circle(self.image, (128,0,128), (PIECE_SIZE,PIECE_SIZE), PIECE_SIZE, 5)
+        pygame.draw.circle(self.image, (170,0,170), (PIECE_SIZE,PIECE_SIZE), PIECE_SIZE, 5)

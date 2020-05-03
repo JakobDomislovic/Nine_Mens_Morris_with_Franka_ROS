@@ -19,36 +19,27 @@ def is_Mill(color, move):
 
 
 def is_Terminal(board, player, white, black):
-
-    if player:
-        
+    
+    if not player:
         if len(white) < 3 and len(board) >= 5:  # minimalno na ploci moze biti 5 igraca
             return True
-        
-        else: 
-            return False
-        
-        for k in white:
-            for i in state_space[k]:
-                if i not in board:
-                    return False
-        
-        return True
+        if len(white) > 3:
+            for k in white:
+                for i in state_space[k]:
+                    if i not in board:
+                        return False
+            return True
 
     else:
-        
         if len(black) < 3 and len(board) >= 5: # minimalno na ploci moze biti 5 igraca
             return True
-        
-        else:
-            return False
-        
-        for k in black:
-            for i in state_space[k]:
-                if i not in board:
-                    return False
-        
-        return True
+
+        if len(black) > 3:
+            for k in black:
+                for i in state_space[k]:
+                    if i not in board:
+                        return False
+            return True
 
 '''
 board - current state of board
@@ -73,41 +64,32 @@ def alpha_beta(board, depth, max_player, alpha, beta, white_pieces, black_pieces
     if number_of_pieces < 1: # ciljno stanje moze biti samo u drugoj ili trecoj fazi
         
         if is_Terminal(board, max_player, white_pieces, black_pieces):
+            print('terminal state, player on move: {}'.format(max_player))
             # utility
-            if max_player: return None, 10000, None, None
-            else: return None, -10000, None, None
-
+            if max_player: return None, -100000, None, None
+            else: return None, 100000, None, None
+    
     if depth == 0:
         return None, number_of_pieces_heuristic(black_pieces, white_pieces, max_player), None, None
-
+    
     ##################### possible moves for every stage of the game ####################
 
-    # kasnije da si skratis kod, zasad sve razdvoji za debugiranje
-
-    #if number_of_pieces >= 0: 
-    #    possible_config = possible_moves_list(board, black_pieces, white_pieces, max_player, 1)
-
-    #elif len(black_pieces) > 3 and len(white_pieces) > 3:
-    #    possible_config = possible_moves_list(board, black_pieces, white_pieces, max_player, 2)
-    #
-    #else:
-    #    possible_config = possible_moves_list(board, black_pieces, white_pieces, max_player, 3)
-
-
     if number_of_pieces > 0:
-        '''
-            FIRST STAGE
-        '''
+        
+        #    -----------------------------------------FIRST STAGE-----------------------------------------
+        
         if max_player:
             
             current_evaluation_max = alpha
             
             mill_flag_black = False
+            flag1 = False
            
             for moves in possible_moves_list(board, black_pieces, white_pieces, max_player, 1):
                 
-                
                 new_board, black, white, is_Mill_move = moves[0], moves[1], moves[2], moves[3]
+                
+                #print('First stage black: {}, {}, {}, {}'.format(new_board, black, white, is_Mill_move))
 
                 _ , from_min, _, _ = alpha_beta(new_board, depth-1, False, current_evaluation_max, beta,
                                                 white, black, number_of_pieces-1)
@@ -124,219 +106,185 @@ def alpha_beta(board, depth, max_player, alpha, beta, white_pieces, black_pieces
                 # -------------------------------------provjera MAX
                 if current_evaluation_max >= from_min:
                     current_evaluation_max = current_evaluation_max
-                    current_move_max = move
-                    
-                    if is_Mill_move:
-                        mill_move_black = white_pieces.symmetric_difference(white).pop()
-                        mill_flag_black = True
-                    
+
                 else:
-                    print(move)
                     current_evaluation_max = from_min
-                    max_move_black = move
+                    current_move_max = move.pop()
                     flag1 = True
                     
                     if is_Mill_move:
-                        max_mill_move_black = white_pieces.symmetric_difference(white).pop()
+                        mill_move_black = white_pieces.symmetric_difference(white).pop()
                         mill_flag_black = True
                 # -------------------------------------kraj provjere max
                 
                 # beta pruning
                 if current_evaluation_max >= beta: return None, beta, None, None
             
-            
 
             if flag1:
-                current_move_max = max_move_black
-                if mill_flag_black: mill_move_black = max_mill_move_black
-            
-            print('\nStavi na poziciju: {}'.format(current_move_max))
-            print('MINIMAX vrijednost: {}'.format(current_evaluation_max))
-
-            # na kraju u igru vracas jedan od ova dva returna --> tu trebas imati i najbolji potez
-            if mill_flag_black: 
-                #print('UBI: {}'.format(mill_move_black))
-                return current_move_max.pop(), current_evaluation_max, mill_move_black, None
-            else: return current_move_max.pop(), current_evaluation_max, None, None
+                #print('Stavi AI na poziciju: {}'.format(current_move_max))
+                #print('MINIMAX vrijednost: {}'.format(current_evaluation_max))
+                if mill_flag_black: return current_move_max, current_evaluation_max, mill_move_black, None
+                else: return current_move_max, current_evaluation_max, None, None
+            else:
+                return None, current_evaluation_max, None, None
 
         else: # if not max_player
 
             current_evaluation_min = beta
-            
-            flag2 = False
             
             for moves in possible_moves_list(board, black_pieces, white_pieces, max_player, 1):
                 
                 new_board, white, black, is_Mill_move = moves[0], moves[1], moves[2], moves[3]
                 
+                #print('First stage White: {}, {}, {}, {}'.format(new_board, black, white, is_Mill_move))
+                
                 _, from_max, _, _ = alpha_beta(new_board, depth-1, True, alpha, current_evaluation_min,
                                                 white, black, number_of_pieces-1)
-                #print('IN MIN')
-                #print(new_board)
-                #print(white)
-                #print(black)
-                #print(len(white), len(black))
-                #print(current_evaluation_min, from_max)
-                #print('In min: {}, {}'.format(current_evaluation_min, from_max))
-                
-                #move = new_board.difference(board)
 
-                # kod min cvora trebas samo traziti najmanjeg nije ti bitna pozicija ili dal ubijas tudu figuru
-                
+                # print('IN MIN')
+                # print(new_board)
+                # print(white)
+                # print(black)
+                # print(len(white), len(black))
+                # print(current_evaluation_min, from_max)
+                # print('In min: {}, {}'.format(current_evaluation_min, from_max))
+
                 current_evaluation_min = min(current_evaluation_min, from_max)
                 
                 # alpha pruning
                 if current_evaluation_min <= alpha: return None, alpha, None, None
                 
-            #else: return current_move_min.pop(), current_evaluation_min, None, None
             return None, current_evaluation_min, None, None
 
-    elif len(black_pieces) > 3 and len(white_pieces) > 3:
+    #-----------------------------------------SECOND STAGE-----------------------------------------
+
+    elif len(black_pieces) > 3 and max_player:
         
-        '''
-            SECOND STAGE
-        '''
-
-        if max_player:
+        current_evaluation_max = alpha
             
-            current_evaluation_max = alpha
+        mill_flag_black = False
+        flag2 = False
+        
+        for moves in possible_moves_list(board, black_pieces, white_pieces, max_player, 2):
             
-            mill_flag_black = False
+            new_board, black, white, is_Mill_move, move, new_place = moves[0], moves[1], moves[2], moves[3], moves[4], moves[5]
+           
+            _ , from_min, _, _ = alpha_beta(new_board, depth-1, False, current_evaluation_max, beta,
+                                            white, black, number_of_pieces)
             
-            for moves in possible_moves_list(board, black_pieces, white_pieces, max_player, 2):
-                
-                new_board, black, white, is_Mill_move, move, new_place = moves[0], moves[1], moves[2], moves[3], moves[4], moves[5]
-
-                _ , from_min, _, _ = alpha_beta(new_board, depth-1, False, current_evaluation_max, beta,
-                                                white, black, number_of_pieces)
-                
-                #move = new_board.difference(board)
-                if is_Mill_move: print('TRUE TRUE TRUE TRUE')
-                # -------------------------------------provjera MAX
-                if current_evaluation_max >= from_min:
-                    current_evaluation_max = current_evaluation_max
-                    current_move_max = move
-                    current_new_place = new_place
-                    if is_Mill_move:
-                        mill_move_black = white_pieces.symmetric_difference(white).pop()
-                        mill_flag_black = True
+            # -------------------------------------provjera MAX
+            if current_evaluation_max >= from_min:
+                current_evaluation_max = current_evaluation_max
+            
+            else:
+                #print('novi max')
+                current_evaluation_max = from_min
+                current_move_max = move
+                current_new_place = new_place
+                flag2 = True
+                if is_Mill_move:
+                    mill_move_black = white_pieces.symmetric_difference(white).pop()
+                    #print(mill_move_black)
+                    mill_flag_black = True
                 else:
-                    current_evaluation_max = from_min
-                    max_move_black = move
-                    max_new_place = new_place
-                    flag2 = True
-                    if is_Mill_move:
-                        max_mill_move_black = white_pieces.symmetric_difference(white).pop()
-                        mill_flag_black = True
-                
-                # -------------------------------------kraj provjere max
-
-                # beta pruning
-                if current_evaluation_max >= beta: return None, beta, None, None
+                    mill_flag_black = False
+            # -------------------------------------kraj provjere max
             
-            if flag2:
-                current_move_max = max_move_black
-                current_new_place = max_new_place
-                if mill_flag_black: mill_move_black = max_mill_move_black
+            #print('old/new/value: {}, {}, {}, {}, {}'.format(move, new_place, from_min, len(black), len(white)))
+            # beta pruning
+            if current_evaluation_max >= beta: return None, beta, None, None
 
-            #print(current_move_max, new_place_4_fig)
+        if flag2:
+            #print(current_evaluation_max)
+            #print(current_move_max)
+            #print(current_new_place)
+            if mill_flag_black: 
+                return current_move_max, current_evaluation_max, mill_move_black, current_new_place
+            else: return current_move_max, current_evaluation_max, None, current_new_place
+        else:
+            return None, current_evaluation_max, None, None
+
+
+    elif len(white_pieces) > 3 and not max_player:
+        
+        current_evaluation_min = beta
+            
+        for moves in possible_moves_list(board, black_pieces, white_pieces, max_player, 2):
+            
+            new_board, white, black, is_Mill_move, move = moves[0], moves[1], moves[2], moves[3], moves[4]
+            
+            #print('Second stage white: {}, {}, {}, {}, {}'.format(new_board, black, white, is_Mill_move, move))
+            
+            _, from_max, _, _ = alpha_beta(new_board, depth-1, True, alpha, current_evaluation_min,
+                                            white, black, number_of_pieces)
+
+
+            current_evaluation_min = min(current_evaluation_min, from_max)
+            
+            # alpha pruning
+            if current_evaluation_min <= alpha: return None, alpha, None, None
+            
+        return None, current_evaluation_min, None, None
+
+
+    #-----------------------------------------THIRD STAGE-----------------------------------------
+
+    elif len(black_pieces) == 3 and max_player:
+        current_evaluation_max = alpha
+            
+        mill_flag_black = False
+        flag3 = False
+                    
+        for moves in possible_moves_list(board, black_pieces, white_pieces, max_player, 3):
+            
+            new_board, black, white, is_Mill_move, move, new_place = moves[0], moves[1], moves[2], moves[3], moves[4], moves[5]
+            _ , from_min, _, _ = alpha_beta(new_board, depth-1, False, current_evaluation_max, beta,
+                                            white, black, number_of_pieces)
+            
+            # -------------------------------------provjera MAX
+            if current_evaluation_max >= from_min:
+                current_evaluation_max = current_evaluation_max
+            
+            else:
+                current_evaluation_max = from_min
+                current_move_max = move
+                current_new_place = new_place
+                flag3 = True
+                #print('\n new max Third stage black: {}, {}, {}, {}, {}, {}, {}'.format(new_board, black, white, is_Mill_move, move, new_place, number_of_pieces))
+                if is_Mill_move:
+                    mill_move_black = white_pieces.symmetric_difference(white).pop()
+                    mill_flag_black = True
+            # -------------------------------------kraj provjere max
+
+            # beta pruning
+            if current_evaluation_max >= beta: return current_move_max, beta, None, None
+        
+        if flag3: 
             if mill_flag_black: return current_move_max, current_evaluation_max, mill_move_black, current_new_place
             else: return current_move_max, current_evaluation_max, None, current_new_place
+        else:
+            return None, current_evaluation_max, None, None
+    
 
-        else: # if not max_player
-
-            current_evaluation_min = beta
-            
-            flag2 = False
-
-            for moves in possible_moves_list(board, black_pieces, white_pieces, max_player, 2):
-                
-                new_board, white, black, is_Mill_move, move = moves[0], moves[1], moves[2], moves[3], moves[4]
-                
-                _, from_max, _, _ = alpha_beta(new_board, depth-1, True, alpha, current_evaluation_min,
-                                                white, black, number_of_pieces)
-  
-                #move = new_board.difference(board)
-
-                current_evaluation_min = min(current_evaluation_min, from_max)
-                
-                # alpha pruning
-                if current_evaluation_min <= alpha: return None, alpha, None, None
-                
-            #else: return current_move_min, current_evaluation_min, None, None
-            return None, current_evaluation_min, None, None
+    elif len(white_pieces) == 3 and not max_player:
         
-
-    else:
-        '''
-            THIRD STAGE
-        '''
-
-        if max_player:
+        current_evaluation_min = beta
+        
+        for moves in possible_moves_list(board, black_pieces, white_pieces, max_player, 3):
             
-            current_evaluation_max = alpha
+            new_board, white, black, is_Mill_move, move = moves[0], moves[1], moves[2], moves[3], moves[4]
+
+            _, from_max, _, _ = alpha_beta(new_board, depth-1, True, alpha, current_evaluation_min,
+                                            white, black, number_of_pieces)
             
-            mill_flag_black = False
-                        
-            for moves in possible_moves_list(board, black_pieces, white_pieces, max_player, 3):
-                
-                new_board, black, white, is_Mill_move, move, new_place = moves[0], moves[1], moves[2], moves[3], moves[4], moves[5]
-
-                _ , from_min, _, _ = alpha_beta(new_board, depth-1, False, current_evaluation_max, beta,
-                                                white, black, number_of_pieces)
-                
-                #move = new_board.difference(board)
-                if is_Mill_move: print('TRUE TRUE TRUE TRUE')
-                # -------------------------------------provjera MAX
-                if current_evaluation_max >= from_min:
-                    current_evaluation_max = current_evaluation_max
-                    current_move_max = move
-                    current_new_place = new_place
-                    if is_Mill_move:
-                        mill_move_black = white_pieces.symmetric_difference(white).pop()
-                        mill_flag_black = True
-                else:
-                    current_evaluation_max = from_min
-                    max_move_black = move
-                    max_new_place = new_place
-                    flag3 = True
-                    if is_Mill_move:
-                        max_mill_move_black = white_pieces.symmetric_difference(white).pop()
-                        mill_flag_black = True
-                
-                # -------------------------------------kraj provjere max
-
-                # beta pruning
-                if current_evaluation_max >= beta: return current_move_max, beta, None, None
+            current_evaluation_min = min(current_evaluation_min, from_max)
             
-            if flag3:
-                current_move_max = max_move_black
-                current_new_place = max_new_place
-                if mill_flag_black: mill_move_black = max_mill_move_black
-
-            #print(current_move_max, new_place_4_fig)
-            if mill_flag_black: return current_move_max, current_evaluation_max, mill_move_black, current_new_place
-            else: return current_move_max, current_evaluation_max, None, current_new_place
-
-        else: # if not max_player
-
-            current_evaluation_min = beta
+            # alpha pruning
+            if current_evaluation_min <= alpha: return None, alpha, None, None
             
-            flag2 = False
+        return None, current_evaluation_min, None, None
 
-            for moves in possible_moves_list(board, black_pieces, white_pieces, max_player, 3):
-                
-                new_board, white, black, is_Mill_move, move = moves[0], moves[1], moves[2], moves[3], moves[4]
-                
-                _, from_max, _, _ = alpha_beta(new_board, depth-1, True, alpha, current_evaluation_min,
-                                                white, black, number_of_pieces)
-  
-                current_evaluation_min = min(current_evaluation_min, from_max)
-                
-                # alpha pruning
-                if current_evaluation_min <= alpha: return None, alpha, None, None
-                
-            return None, current_evaluation_min, None, None
 
 
 
@@ -361,14 +309,19 @@ def possible_moves_list(board_x, black_x, white_x, max_player, stage):
         initial_second = copy.deepcopy(white_x)
         help4 = set()
 
-        for m in mill_combinations:
-            help1 = set()
-            for t in m: help1.add(t)
-            for i in white_x:
-                not_in_mill.add(i)
-                if i in help1 and help1.issubset(white_x):
-                    help4.add(i)
+        if len(white_x) == 3: not_in_mill = white_x
+        else:
+            for m in mill_combinations:
+                help1 = set()
+                for t in m: help1.add(t)
+                for i in white_x:
+                    not_in_mill.add(i)
+                    if i in help1 and help1.issubset(white_x):
+                        help4.add(i)
 
+            if help4 == white_x: not_in_mill = white_x   # ako su sve figure u mlinu onda smijes ubiti bilo koju 
+            else: not_in_mill.difference_update(help4)
+    
     else:
         
         first_col = copy.deepcopy(white_x)
@@ -377,15 +330,18 @@ def possible_moves_list(board_x, black_x, white_x, max_player, stage):
         initial_second = copy.deepcopy(black_x)
         help4 = set()
 
-        for m in mill_combinations:
-            help1 = set()
-            for t in m: help1.add(t)
-            for i in black_x:
-                not_in_mill.add(i)
-                if i in help1 and help1.issubset(black_x):
-                    help4.add(i)
-                    
-    not_in_mill.difference_update(help4)
+        if len(black_x) == 3: not_in_mill = black_x
+        else:
+            for m in mill_combinations:
+                help1 = set()
+                for t in m: help1.add(t)
+                for i in black_x:
+                    not_in_mill.add(i)
+                    if i in help1 and help1.issubset(black_x):
+                        help4.add(i)
+
+            if help4 == black_x: not_in_mill = black_x   # ako su sve figure u mlinu onda smijes ubiti bilo koju 
+            else: not_in_mill.difference_update(help4)
     
     if stage == 1:
         
@@ -529,13 +485,13 @@ def possible_moves_list(board_x, black_x, white_x, max_player, stage):
 
 
 # testiranja
-#for i in possible_moves_list({'a1', 'a4', 'd2','g7', 'g4', 'd1'}, {'g7', 'g4', 'd1'}, {'a1', 'a4', 'd2'}, True, 2):
-#    print('\nboard: {}'.format(i[0]))
-#    print('black: {}'.format(i[1]))
-#    print('white: {}'.format(i[2]))
-#    print('in mill: {}'.format(i[3]))
-#    print('move figure: {}'.format(i[4]))
-#    print('new place: {}\n'.format(i[5]))
+# for i in possible_moves_list({'f2', 'g4', 'f6', 'b4', 'c3', 'b6', 'b2', 'd6', 'e4', 'd2', 'c5'}, {'f6', 'b4', 'd6', 'b6', 'b2', 'c3', 'e4', 'd2', 'c5'}, {'f2', 'g4'},True, 2):
+#     print('\nboard: {}'.format(i[0]))
+#     print('black: {}'.format(i[1]))
+#     print('white: {}'.format(i[2]))
+#     print('in mill: {}'.format(i[3]))
+#     print('move figure: {}'.format(i[4]))
+#     print('new place: {}\n'.format(i[5]))
 
 
 
