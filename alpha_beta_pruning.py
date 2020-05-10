@@ -1,6 +1,6 @@
 from state_space_descriptor import state_space, position_on_board, mill_combinations
 
-from heuristics import number_of_pieces_heuristic, first_stage_heuristics
+from heuristics import number_of_pieces_heuristic, first_stage_heuristics, number_of_blocked_pieces, try_2_block_pieces
 
 import copy
 
@@ -26,8 +26,7 @@ def is_Terminal(board, player, white, black):
         if len(white) > 3:
             for k in white:
                 for i in state_space[k]:
-                    if i not in board:
-                        return False
+                    if i not in board: return False # cim se nade slobodna susjedna pozicija nije terminal
             return True
 
     else:
@@ -37,8 +36,7 @@ def is_Terminal(board, player, white, black):
         if len(black) > 3:
             for k in black:
                 for i in state_space[k]:
-                    if i not in board:
-                        return False
+                    if i not in board: return False # cim se nade slobodna susjedna pozicija nije terminal
             return True
 
 '''
@@ -70,7 +68,7 @@ def alpha_beta(board, depth, max_player, alpha, beta, white_pieces, black_pieces
             else: return None, 100000, None, None
     
     if depth == 0:
-        return None, number_of_pieces_heuristic(black_pieces, white_pieces, max_player), None, None
+        return None, number_of_blocked_pieces(black_pieces, white_pieces, number_of_pieces), None, None
     
     ##################### possible moves for every stage of the game ####################
 
@@ -173,6 +171,8 @@ def alpha_beta(board, depth, max_player, alpha, beta, white_pieces, black_pieces
             _ , from_min, _, _ = alpha_beta(new_board, depth-1, False, current_evaluation_max, beta,
                                             white, black, number_of_pieces)
             
+            #print(from_min, current_evaluation_max, move)
+
             # -------------------------------------provjera MAX
             if current_evaluation_max >= from_min:
                 current_evaluation_max = current_evaluation_max
