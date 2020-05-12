@@ -21,19 +21,30 @@ THICK = 5                    # line thickness
 PIECE_SIZE = 25              # piece radius
 ########################################### GUI settings ##################################################
 
-# global moves counter - each game will be automatically stopped after 100 moves if nobody had won
-GLOBAL_MOVE_COUNTER = 0
+GLOBAL_search_depth = 0
+GLOBAL_heur_choice = 0
 
 # group of sprites
 all_pieces_list = pygame.sprite.Group() # pozivas kad oces sve uploadati na ekran
 white_pieces_list = pygame.sprite.Group()
 black_pieces_list = pygame.sprite.Group()
 
+
 class Game_Board():
 
-    def __init__(self, game_mode):
-
+    def __init__(self, game_mode, depth, heuristic_choice):
+        
+        self.global_move_counter = 0
+        
         self.game_mode = game_mode
+        
+        self.depth = depth
+
+        global GLOBAL_search_depth
+        GLOBAL_search_depth = depth
+        
+        global GLOBAL_heur_choice
+        GLOBAL_heur_choice = heuristic_choice
 
         self.mouse_click = False
 
@@ -56,6 +67,8 @@ class Game_Board():
         self.screen = pygame.display.set_mode([WIDTH, HEIGHT])
         pygame.display.set_caption("Nine Men's Morris")
         pygame.display.flip()
+
+        # kasnije dodaj jos da mozes birati ko je prvi na potezu 
         self.PLAYER_ON_MOVE = WHITE
 
         self.clock = pygame.time.Clock()
@@ -153,7 +166,7 @@ class Game_Board():
 
 
     def update_gui_AI(self):
-        global GLOBAL_MOVE_COUNTER
+        
         self.running = True
         self.make_mill_move_white = False
         self.make_mill_move_black = False
@@ -178,7 +191,7 @@ class Game_Board():
                 self.mouse_click = False
                 is_legal_move_made = self.make_move(self.PLAYER_ON_MOVE, [self.mx, self.my], 1, None)
                 if is_legal_move_made:
-                    GLOBAL_MOVE_COUNTER += 1
+                    self.global_move_counter += 1
                     #print('Trenutni u bijelom mlinu: {}'.format(self.white_mill_dict.keys()))
                     if self.is_mill(WHITE):
                         self.make_mill_move_white = True
@@ -208,11 +221,11 @@ class Game_Board():
                 #print(list(white_pieces))
 
                 if self.NUMBER_OF_PIECES > 0:
-                    GLOBAL_MOVE_COUNTER += 1
+                    self.global_move_counter += 1
                     # in first stage we only put pieces down, we are never moving them
                     print('Prva faza crni')
-                    new_move, evaluation_value, figure_to_kill, _ = alpha_beta(board, 4, True, float('-inf'),float('inf'),
-                                                                                           white_pieces, black_pieces, self.NUMBER_OF_PIECES)
+                    new_move, evaluation_value, figure_to_kill, _ = alpha_beta(board, self.depth, True, float('-inf'),float('inf'),
+                                                                                           white_pieces, black_pieces, self.NUMBER_OF_PIECES, None)
                     
                     print('Move: {}\nFigure to kill: {}'.format(new_move, figure_to_kill))
 
@@ -223,9 +236,9 @@ class Game_Board():
                 else:
                     if self.BLACK_PIECES > 3: print('Druga faza crni')
                     else: print('Treca faza crni')
-                    GLOBAL_MOVE_COUNTER += 1
-                    new_move, evaluation_value, figure_to_kill, new_place = alpha_beta(board, 4, True, float('-inf'),float('inf'),
-                                                                                           white_pieces, black_pieces, self.NUMBER_OF_PIECES)
+                    self.global_move_counter += 1
+                    new_move, evaluation_value, figure_to_kill, new_place = alpha_beta(board, self.depth, True, float('-inf'),float('inf'),
+                                                                                           white_pieces, black_pieces, self.NUMBER_OF_PIECES, None)
                     print('Move: {}\nNew place: {}\nFigure to kill: {}'.format(new_move, new_place, figure_to_kill))
                     self.trash = self.make_move(self.PLAYER_ON_MOVE, position_on_board[new_move], 1, new_place)
 
@@ -247,18 +260,19 @@ class Game_Board():
             all_pieces_list.draw(self.screen)
             pygame.display.flip()
 
-            if GLOBAL_MOVE_COUNTER == 100:
+            if self.global_move_counter == 100:
                 print('Tie game.')
-
+                time.sleep(5)
+                pygame.quit()
             # provjera je li doslo do kraja igre
             if self.white_positions_taken and not self.NUMBER_OF_PIECES and self.no_legal_moves_game_loss(WHITE) or self.WHITE_PIECES < 3:
                 print('Black wins.')
-                print('Moves counter: {}'.format(GLOBAL_MOVE_COUNTER))
+                print('Moves counter: {}'.format(self.global_move_counter))
                 time.sleep(5)
                 pygame.quit()
             if self.black_positions_taken and not self.NUMBER_OF_PIECES and self.no_legal_moves_game_loss(BLACK) or self.BLACK_PIECES < 3:
                 print('White wins.')
-                print('Moves counter: {}'.format(GLOBAL_MOVE_COUNTER))
+                print('Moves counter: {}'.format(self.global_move_counter))
                 time.sleep(5)
                 pygame.quit()
             # nerijeseno ispitaj jesi li u fazi dva  ili tri i sve figure koje postoje su u mlinu
