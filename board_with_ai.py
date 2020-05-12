@@ -265,12 +265,12 @@ class Game_Board():
                 time.sleep(5)
                 pygame.quit()
             # provjera je li doslo do kraja igre
-            if self.white_positions_taken and not self.NUMBER_OF_PIECES and self.no_legal_moves_game_loss(WHITE) or self.WHITE_PIECES < 3:
+            if (self.white_positions_taken and not self.NUMBER_OF_PIECES and self.no_legal_moves_game_loss(WHITE)) or self.WHITE_PIECES < 3:
                 print('Black wins.')
                 print('Moves counter: {}'.format(self.global_move_counter))
                 time.sleep(5)
                 pygame.quit()
-            if self.black_positions_taken and not self.NUMBER_OF_PIECES and self.no_legal_moves_game_loss(BLACK) or self.BLACK_PIECES < 3:
+            if (self.black_positions_taken and not self.NUMBER_OF_PIECES and self.no_legal_moves_game_loss(BLACK)) or self.BLACK_PIECES < 3:
                 print('White wins.')
                 print('Moves counter: {}'.format(self.global_move_counter))
                 time.sleep(5)
@@ -594,6 +594,9 @@ class Game_Board():
         '''
         ako nemas legalnih poteza gubis vracas True, ako imas False
         '''
+        
+        if self.BLACK_PIECES > 3 or self.WHITE_PIECES > 3: return False
+
         if col == WHITE:
             for k in self.white_positions_taken:
                 for i in state_space[k]:

@@ -4,7 +4,8 @@ from heuristics import number_of_pieces_heuristic # testing
 from heuristics import first_stage_heuristics
 from heuristics import number_of_blocked_pieces
 from heuristics import try_2_block_pieces # testing
-from heuristics import number_of_double_mill #testing
+from heuristics import try_different_mills #testing
+from heuristics import advanced_heuristic #testing
 
 import copy
 import board_with_ai
@@ -73,21 +74,26 @@ def alpha_beta(board, depth, max_player, alpha, beta, white_pieces, black_pieces
                 if max_player: return None, -100000+number_of_pieces_heuristic(black_pieces, white_pieces, number_of_pieces, mill_move_flag, max_player, depth), None, None
                 else: return None, 100000+number_of_pieces_heuristic(black_pieces, white_pieces, number_of_pieces, mill_move_flag, max_player, depth), None, None
         
-            if board_with_ai.GLOBAL_heur_choice == 2:
+            elif board_with_ai.GLOBAL_heur_choice == 2:
                 if max_player: return None, -100000+try_2_block_pieces(black_pieces, white_pieces, number_of_pieces, mill_move_flag, max_player, depth), None, None
                 else: return None, 100000+try_2_block_pieces(black_pieces, white_pieces, number_of_pieces, mill_move_flag, max_player, depth), None, None
         
-            if board_with_ai.GLOBAL_heur_choice == 3:
-                if max_player: return None, -100000+number_of_double_mill(black_pieces, white_pieces, number_of_pieces, mill_move_flag, max_player, depth), None, None
-                else: return None, 100000+number_of_double_mill(black_pieces, white_pieces, number_of_pieces, mill_move_flag, max_player, depth), None, None
+            elif board_with_ai.GLOBAL_heur_choice == 3:
+                if max_player: return None, -100000+try_different_mills(black_pieces, white_pieces, number_of_pieces, mill_move_flag, max_player, depth), None, None
+                else: return None, 100000+try_different_mills(black_pieces, white_pieces, number_of_pieces, mill_move_flag, max_player, depth), None, None
+            else:
+                if max_player: return None, -100000+advanced_heuristic(black_pieces, white_pieces, number_of_pieces, mill_move_flag, max_player, depth), None, None
+                else: return None, 100000+advanced_heuristic(black_pieces, white_pieces, number_of_pieces, mill_move_flag, max_player, depth), None, None
             
     if depth == 0:
         if board_with_ai.GLOBAL_heur_choice == 1: return None, number_of_pieces_heuristic(black_pieces, white_pieces, number_of_pieces, mill_move_flag, max_player, depth), None, None
         
-        if board_with_ai.GLOBAL_heur_choice == 2: return None, try_2_block_pieces(black_pieces, white_pieces, number_of_pieces, mill_move_flag, max_player, depth), None, None
+        elif board_with_ai.GLOBAL_heur_choice == 2: return None, try_2_block_pieces(black_pieces, white_pieces, number_of_pieces, mill_move_flag, max_player, depth), None, None
         
-        if board_with_ai.GLOBAL_heur_choice == 3: return None, number_of_double_mill(black_pieces, white_pieces, number_of_pieces, mill_move_flag, max_player, depth), None, None
+        elif board_with_ai.GLOBAL_heur_choice == 3: return None, try_different_mills(black_pieces, white_pieces, number_of_pieces, mill_move_flag, max_player, depth), None, None
         
+        else: return None, advanced_heuristic(black_pieces, white_pieces, number_of_pieces, mill_move_flag, max_player, depth), None, None
+
     ##################### possible moves for every stage of the game ####################
 
     if number_of_pieces > 0:

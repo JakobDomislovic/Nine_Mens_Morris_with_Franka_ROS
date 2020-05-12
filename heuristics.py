@@ -1,5 +1,4 @@
-#from alpha_beta_pruning import possible_moves_list
-from state_space_descriptor import state_space, super_move_formations
+from state_space_descriptor import state_space, super_move_formations, mill_combinations
 import board_with_ai # global variable GLOBAL_search_depth
 
 
@@ -140,9 +139,9 @@ def number_of_blocked_pieces(black, white, number_of_pieces, mill_move_flag, pla
     return evaluation
 
 
-def number_of_double_mill(black, white, number_of_pieces, mill_move_flag, player):
+def try_different_mills(black, white, number_of_pieces, mill_move_flag, player, depth):
     '''
-    difference between black double mill and white double mill
+    different mill, and possible mills configs
     '''
 
     evaluation = 0
@@ -150,23 +149,118 @@ def number_of_double_mill(black, white, number_of_pieces, mill_move_flag, player
     length_black = len(black)
     length_white = len(white)
 
-    black_double_mills, white_double_mills = super_move_formation(black, white) 
-
+    white_two_piece, black_two_piece = two_piece_config(black, white)
+    white_three_piece, black_three_piece = three_piece_config(black, white)
+    white_super_mill, black_super_mill = super_move_formation(black, white)
+    
     if number_of_pieces:
-        evaluation += (black_double_mills - white_double_mills) * 50
-        evaluation += (length_black - length_white) * 5
+        # first stage
+        if mill_move_flag: evaluation += 20
+        evaluation += (length_black - length_white) * 10
+        evaluation += (black_two_piece - white_two_piece) * 10
+        evaluation += (black_three_piece - white_three_piece) * 7
+
+    elif not player and length_black > 3:
+        # u drugoj i trecoj fazi vise cijeni mlinove nego u prvoj
+        if mill_move_flag: evaluation += 100
+        evaluation += (length_black - length_white) * 15
+        evaluation += (black_three_piece - white_three_piece) * 5
+        evaluation += (black_super_mill - white_super_mill) * 10
+    
+    elif player and length_white > 3:
+        # u drugoj i trecoj fazi vise cijeni mlinove nego u prvoj
+        if mill_move_flag: evaluation += -100
+        evaluation += (length_black - length_white) * 15
+        evaluation += (black_two_piece - white_two_piece) * 5
+        evaluation += (black_three_piece - white_three_piece) * 5
+        evaluation += (black_super_mill - white_super_mill) * 10
     
     else:
-        evaluation += (black_double_mills - white_double_mills) * 50
-        if black_double_mills or white_double_mills:
-            evaluation += (length_black - length_white) * 500
+        if player:
+            if mill_move_flag: evaluation += -100
         else:
-            evaluation += (length_black - length_white) * 50
-        if mill_move_flag: 
-            if player: evaluation -= 1000
-            else: evaluation += 1000
+            evaluation += 100
+        evaluation += (length_black - length_white) * 10
+        evaluation += (black_two_piece - white_two_piece) * 50
+        evaluation += (black_three_piece - white_three_piece) * 50   
+    
+    if depth == board_with_ai.GLOBAL_search_depth - 1:
+        if mill_move_flag:
+            if player:
+                evaluation += -1000
+            else:
+                evaluation += 1000
+
     return evaluation
 
+
+def advanced_heuristic(black, white, number_of_pieces, mill_move_flag, player, depth):
+    evaluation = 0
+
+    length_black = len(black)
+    length_white = len(white)
+    length_diff = length_black - length_white
+
+    white_num_morris, black_num_morris = number_of_morrises(black, white)
+    morrises_diff = black_num_morris - white_num_morris
+
+    white_no_adj, black_no_adj = no_adjacent(black, white)
+    no_adj_diff = white_no_adj - black_no_adj # pazi ovdje oduzimas protivnik - igrac jer ti je cilj da protivnik ima sto manje susjednih mjesta slobodno
+
+    white_two_piece, black_two_piece = two_piece_config(black, white)
+    two_piece_diff = black_two_piece - white_two_piece
+
+    white_three_piece, black_three_piece = three_piece_config(black, white)
+    three_piece_diff = black_three_piece - white_three_piece
+
+    white_super_mill, black_super_mill = super_move_formation(black, white)
+    super_mill_diff =  black_super_mill - white_super_mill
+    
+    18 * (1) + 26 * (2) + 1 * (3) + 9 * (4) + 10 * (5) + 7 * (6)
+    14 * (1) + 43 * (2) + 10 * (3) + 11 * (4) + 8 * (7) + 1086 * (8)
+    16 * (1) + 10 * (5) + 1 * (6) + 1190 * (8)
+
+    if number_of_pieces:
+        # first stage
+        if mill_move_flag: evaluation += 20
+        evaluation += morrises_diff * 30
+        evaluation += no_adj_diff * 2
+        evaluation += length_diff * 10
+        evaluation += two_piece_diff * 15
+        evaluation += three_piece_diff * 7
+
+    elif not player and length_black > 3:
+        # u drugoj i trecoj fazi vise cijeni mlinove nego u prvoj
+        if mill_move_flag: evaluation += 15
+        evaluation += morrises_diff * 40
+        evaluation += no_adj_diff * 15
+        evaluation += length_diff * 10
+        evaluation += super_mill_diff * 50
+    
+    elif player and length_white > 3:
+        # u drugoj i trecoj fazi vise cijeni mlinove nego u prvoj
+        if mill_move_flag: evaluation += -15
+        evaluation += morrises_diff * 40
+        evaluation += no_adj_diff * 15
+        evaluation += length_diff * 10
+        evaluation += super_mill_diff * 50
+
+    else:
+        if player:
+            if mill_move_flag: evaluation += -15
+        else:
+            evaluation += 15
+        evaluation += two_piece_diff * 10
+        evaluation += three_piece_diff * 2
+        
+    if depth == board_with_ai.GLOBAL_search_depth - 1:
+        if mill_move_flag:
+            if player:
+                evaluation += -1000
+            else:
+                evaluation += 1000
+
+    return evaluation
 
 ########################################      HELPER FUNCTIONS      ########################################
 
@@ -227,7 +321,90 @@ def super_move_formation(black, white):
     for super_move in super_move_formations:
         if super_move.issubset(white): count_super_white += 1
 
-    return count_super_black, count_super_white
+    return count_super_white, count_super_black
+
+
+def three_piece_config(black, white):
+    
+    count_white = 0
+    count_black = 0
+
+    for bl in black:
+        if bl[0]=='d' or bl[1]=='4': continue
+        cnt = 0
+        for fig in state_space[bl]:
+            if fig in black: cnt += 1
+        if cnt == 2: count_black += 1
+    
+    for wh in white:
+        if wh[0]=='d' or wh[1]=='4': continue
+        cnt = 0
+        for fig in state_space[wh]:
+            if fig in white: cnt += 1
+        if cnt == 2: count_white += 1
+
+    return count_white, count_black
+    
+
+
+def two_piece_config(black, white):
+    
+    count_white = 0
+    count_black = 0
+
+    for bl in black:
+        cnt = 0
+        for fig in state_space[bl]:
+            if fig in black: cnt += 1
+        if cnt == 1: count_black += 1
+
+    for wh in white:
+        cnt = 0
+        for fig in state_space[wh]:
+            if fig in white: cnt += 1
+        if cnt == 1: count_white += 1
+
+    return count_white, count_black
+
+
+def number_of_morrises(black, white):
+
+    count_white = 0
+    count_black = 0
+
+    for mill in mill_combinations:
+        flag_white = True
+        flag_black = True
+        for m in mill:
+            if m not in black:
+                flag_black = False
+                break
+        if flag_black:
+            count_black += 1
+            continue # ako je nesto u crnom mlinu ne moze biti i u bijelom
+
+        for m in mill:
+            if m not in white:
+                flag_white = False
+                break
+        if flag_white:
+            count_white += 1
+
+    return count_white, count_black
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
