@@ -244,9 +244,9 @@ class Game_Board():
                     
                     self.trash = self.make_move(self.PLAYER_ON_MOVE, position_on_board[new_move], 1, new_place)
 
-                    if not figure_to_kill:
+                    if new_move not in self.black_mill_dict:
                         global GLOBAL_last_move
-                        GLOBAL_last_move.append(new_move)
+                        GLOBAL_last_move.append((new_move, new_place))
 
                 if figure_to_kill:
                     self.kill_piece(BLACK, figure_to_kill)
