@@ -7,6 +7,6 @@ pip install pygame
 
 GUI se pokreće automatski pokretanjem skripte: 
 
-```
-bash python main.py
+```bash
+python main.py
 ```
