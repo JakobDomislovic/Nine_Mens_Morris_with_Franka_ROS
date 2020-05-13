@@ -81,7 +81,7 @@ def alpha_beta(board, depth, max_player, alpha, beta, white_pieces, black_pieces
             elif board_with_ai.GLOBAL_heur_choice == 3:
                 if max_player: return None, -100000+try_different_mills(black_pieces, white_pieces, number_of_pieces, mill_move_flag, max_player, depth), None, None
                 else: return None, 100000+try_different_mills(black_pieces, white_pieces, number_of_pieces, mill_move_flag, max_player, depth), None, None
-            else:
+            elif board_with_ai.GLOBAL_heur_choice == 4:
                 if max_player: return None, -100000+advanced_heuristic(black_pieces, white_pieces, number_of_pieces, mill_move_flag, max_player, depth), None, None
                 else: return None, 100000+advanced_heuristic(black_pieces, white_pieces, number_of_pieces, mill_move_flag, max_player, depth), None, None
             
@@ -92,7 +92,7 @@ def alpha_beta(board, depth, max_player, alpha, beta, white_pieces, black_pieces
         
         elif board_with_ai.GLOBAL_heur_choice == 3: return None, try_different_mills(black_pieces, white_pieces, number_of_pieces, mill_move_flag, max_player, depth), None, None
         
-        else: return None, advanced_heuristic(black_pieces, white_pieces, number_of_pieces, mill_move_flag, max_player, depth), None, None
+        elif board_with_ai.GLOBAL_heur_choice == 4: return None, advanced_heuristic(black_pieces, white_pieces, number_of_pieces, mill_move_flag, max_player, depth), None, None
 
     ##################### possible moves for every stage of the game ####################
 

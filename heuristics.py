@@ -2,6 +2,7 @@ from state_space_descriptor import state_space, super_move_formations, mill_comb
 import board_with_ai # global variable GLOBAL_search_depth
 
 
+
 def number_of_pieces_heuristic(black, white, number_of_pieces, mill_move_flag, player, depth):
     '''
     comparing number of pieces
@@ -29,6 +30,7 @@ def number_of_pieces_heuristic(black, white, number_of_pieces, mill_move_flag, p
                     evaluation += 1000
         
     return evaluation
+
 
 def first_stage_heuristics(black, white, max_player):
     '''
@@ -215,10 +217,6 @@ def advanced_heuristic(black, white, number_of_pieces, mill_move_flag, player, d
 
     white_super_mill, black_super_mill = super_move_formation(black, white)
     super_mill_diff =  black_super_mill - white_super_mill
-    
-    18 * (1) + 26 * (2) + 1 * (3) + 9 * (4) + 10 * (5) + 7 * (6)
-    14 * (1) + 43 * (2) + 10 * (3) + 11 * (4) + 8 * (7) + 1086 * (8)
-    16 * (1) + 10 * (5) + 1 * (6) + 1190 * (8)
 
     if number_of_pieces:
         # first stage
@@ -261,6 +259,8 @@ def advanced_heuristic(black, white, number_of_pieces, mill_move_flag, player, d
                 evaluation += 1000
 
     return evaluation
+
+
 
 ########################################      HELPER FUNCTIONS      ########################################
 
