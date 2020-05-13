@@ -107,7 +107,7 @@ def alpha_beta(board, depth, max_player, alpha, beta, white_pieces, black_pieces
             mill_flag_black = False
             flag1 = False
            
-            for moves in possible_moves_list(board, black_pieces, white_pieces, max_player, 1):
+            for moves in possible_moves_list(board, black_pieces, white_pieces, max_player, 1, depth):
                 
                 new_board, black, white, is_Mill_move = moves[0], moves[1], moves[2], moves[3]
                 
@@ -159,7 +159,7 @@ def alpha_beta(board, depth, max_player, alpha, beta, white_pieces, black_pieces
 
             current_evaluation_min = beta
             
-            for moves in possible_moves_list(board, black_pieces, white_pieces, max_player, 1):
+            for moves in possible_moves_list(board, black_pieces, white_pieces, max_player, 1, depth):
                 
                 new_board, white, black, is_Mill_move = moves[0], moves[1], moves[2], moves[3]
                 
@@ -192,7 +192,7 @@ def alpha_beta(board, depth, max_player, alpha, beta, white_pieces, black_pieces
         mill_flag_black = False
         flag2 = False
         
-        for moves in possible_moves_list(board, black_pieces, white_pieces, max_player, 2):
+        for moves in possible_moves_list(board, black_pieces, white_pieces, max_player, 2, depth):
             
             new_board, black, white, is_Mill_move, move, new_place = moves[0], moves[1], moves[2], moves[3], moves[4], moves[5]
            
@@ -240,7 +240,7 @@ def alpha_beta(board, depth, max_player, alpha, beta, white_pieces, black_pieces
         
         current_evaluation_min = beta
             
-        for moves in possible_moves_list(board, black_pieces, white_pieces, max_player, 2):
+        for moves in possible_moves_list(board, black_pieces, white_pieces, max_player, 2, depth):
             
             new_board, white, black, is_Mill_move, move = moves[0], moves[1], moves[2], moves[3], moves[4]
             
@@ -266,7 +266,7 @@ def alpha_beta(board, depth, max_player, alpha, beta, white_pieces, black_pieces
         mill_flag_black = False
         flag3 = False
                     
-        for moves in possible_moves_list(board, black_pieces, white_pieces, max_player, 3):
+        for moves in possible_moves_list(board, black_pieces, white_pieces, max_player, 3, depth):
             
             new_board, black, white, is_Mill_move, move, new_place = moves[0], moves[1], moves[2], moves[3], moves[4], moves[5]
             
@@ -304,7 +304,7 @@ def alpha_beta(board, depth, max_player, alpha, beta, white_pieces, black_pieces
         
         current_evaluation_min = beta
         
-        for moves in possible_moves_list(board, black_pieces, white_pieces, max_player, 3):
+        for moves in possible_moves_list(board, black_pieces, white_pieces, max_player, 3, depth):
             
             new_board, white, black, is_Mill_move, move = moves[0], moves[1], moves[2], moves[3], moves[4]
 
@@ -321,7 +321,7 @@ def alpha_beta(board, depth, max_player, alpha, beta, white_pieces, black_pieces
 
 
 
-def possible_moves_list(board_x, black_x, white_x, max_player, stage):
+def possible_moves_list(board_x, black_x, white_x, max_player, stage, depth):
     
     # razmisli treba li ti uopce 'deepcopy', to je O(n)
 
@@ -424,7 +424,14 @@ def possible_moves_list(board_x, black_x, white_x, max_player, stage):
             help_first_col = first_col.difference({figure})
             
             for adjacent in state_space[figure]:
-                
+
+                if depth == board_with_ai.GLOBAL_search_depth and board_with_ai.GLOBAL_last_move:
+                    compare0 = board_with_ai.GLOBAL_last_move[0][0]
+                    compare1 = board_with_ai.GLOBAL_last_move[0][1]
+                    if adjacent == compare0 and figure == compare1:
+                        board_with_ai.GLOBAL_last_move.pop()
+                        continue
+
                 if adjacent in board: continue
 
                 move_figure.append(figure)
@@ -477,6 +484,13 @@ def possible_moves_list(board_x, black_x, white_x, max_player, stage):
             
             for move in state_space.keys(): # only difference between stage 2 and 3 is that in stage 3 we can move on any free field
                 
+                if depth == board_with_ai.GLOBAL_search_depth and board_with_ai.GLOBAL_last_move:
+                    compare0 = board_with_ai.GLOBAL_last_move[0][0]
+                    compare1 = board_with_ai.GLOBAL_last_move[0][1]
+                    if move == compare0 and compare1 == figure:
+                        board_with_ai.GLOBAL_last_move.pop()
+                        continue
+
                 if move in board: continue
 
                 move_figure.append(figure)

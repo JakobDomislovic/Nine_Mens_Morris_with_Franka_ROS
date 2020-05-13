@@ -2,13 +2,12 @@ from state_space_descriptor import state_space, super_move_formations, mill_comb
 import board_with_ai # global variable GLOBAL_search_depth
 
 
-
 def number_of_pieces_heuristic(black, white, number_of_pieces, mill_move_flag, player, depth):
     '''
     comparing number of pieces
     '''
     evaluation = 0
-    
+
     if number_of_pieces:
         # stage 1
         evaluation += (len(black) - len(white)) * 100

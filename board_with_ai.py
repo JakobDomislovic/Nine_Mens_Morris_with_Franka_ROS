@@ -23,6 +23,7 @@ PIECE_SIZE = 25              # piece radius
 
 GLOBAL_search_depth = 0
 GLOBAL_heur_choice = 0
+GLOBAL_last_move = []
 
 # group of sprites
 all_pieces_list = pygame.sprite.Group() # pozivas kad oces sve uploadati na ekran
@@ -32,7 +33,7 @@ black_pieces_list = pygame.sprite.Group()
 
 class Game_Board():
 
-    def __init__(self, game_mode, depth, heuristic_choice):
+    def __init__(self, game_mode, depth, heuristic_choice, heuristic_choice2):
         
         self.global_move_counter = 0
         
@@ -40,11 +41,17 @@ class Game_Board():
         
         self.depth = depth
 
+        self.heur_choice1 = heuristic_choice
+        self.heur_choice2 = heuristic_choice2
+
         global GLOBAL_search_depth
         GLOBAL_search_depth = depth
         
         global GLOBAL_heur_choice
         GLOBAL_heur_choice = heuristic_choice
+
+        self.history_white = []
+        self.history_black = []
 
         self.mouse_click = False
 
@@ -74,14 +81,11 @@ class Game_Board():
         self.clock = pygame.time.Clock()
         self.make_mill_move = False
 
-        print('Put WHITE piece on board.\n')
-        
-        if self.game_mode == 1:
-            #self.depth = input('Search depth: ')
-            self.update_gui_AI() 
-        elif game_mode == 2:
-            self.update_gui_PvP()
-
+        if self.game_mode == 1: self.update_gui_AI() 
+        elif self.game_mode == 2: self.update_gui_PvP()
+        elif self.game_mode == 3: self.update_gui_AIvsAI()
+    
+    
     def update_gui_PvP(self):
         self.running = True
         self.make_mill_move_white = False
@@ -184,10 +188,7 @@ class Game_Board():
 
 
             if self.PLAYER_ON_MOVE == WHITE and self.mouse_click:
-                #if self.NUMBER_OF_PIECES: print('PRVA FAZA BIJELI:')
-                #elif not self.NUMBER_OF_PIECES and self.WHITE_PIECES > 3: print('DRUGA FAZA BIJELI. upisi prvo poziciju koju zelis pomaknuti onda kamo pomaknuti')
-                #else: print('Treca faza, klinki prvo poziciju kojeg zelis maknuti onda kamo.')
-
+               
                 self.mouse_click = False
                 is_legal_move_made = self.make_move(self.PLAYER_ON_MOVE, [self.mx, self.my], 1, None)
                 if is_legal_move_made:
@@ -240,7 +241,12 @@ class Game_Board():
                     new_move, evaluation_value, figure_to_kill, new_place = alpha_beta(board, self.depth, True, float('-inf'),float('inf'),
                                                                                            white_pieces, black_pieces, self.NUMBER_OF_PIECES, None)
                     print('Move: {}\nNew place: {}\nFigure to kill: {}'.format(new_move, new_place, figure_to_kill))
+                    
                     self.trash = self.make_move(self.PLAYER_ON_MOVE, position_on_board[new_move], 1, new_place)
+
+                    if not figure_to_kill:
+                        global GLOBAL_last_move
+                        GLOBAL_last_move.append(new_move)
 
                 if figure_to_kill:
                     self.kill_piece(BLACK, figure_to_kill)
@@ -280,8 +286,178 @@ class Game_Board():
         
         time.sleep(5)
         pygame.quit()
-        print(self.closed_positions.keys())
 
+
+    def update_gui_AIvsAI(self):
+        
+        self.running = True
+        self.make_mill_move_white = False
+        self.make_mill_move_black = False
+
+        self.gui_settings()
+       
+        
+        if self.PLAYER_ON_MOVE == WHITE:
+            # first move in ai_vs_ai is random
+            print('\nAI white on turn.')
+            print('First stage white.')
+
+            first_move = random.choice(state_space.keys())
+            print('Move: {}\nFigure to kill: None'.format(first_move))
+
+            self.trash = self.make_move(self.PLAYER_ON_MOVE, position_on_board[first_move], 3, None)
+
+            self.PLAYER_ON_MOVE = BLACK
+        
+        elif self.PLAYER_ON_MOVE == BLACK:
+            # first move in ai_vs_ai is random
+            print('\nAI black on turn.')
+            print('First stage black.')
+
+            first_move = random.choice(state_space.keys())
+            print('Move: {}\nFigure to kill: None'.format(first_move))
+
+            self.trash = self.make_move(self.PLAYER_ON_MOVE, position_on_board[first_move], 3, None)
+
+            self.PLAYER_ON_MOVE = WHITE
+
+        all_pieces_list.update()
+        all_pieces_list.draw(self.screen)
+        pygame.display.flip()
+
+
+        while self.running:
+
+            self.gui_settings()
+
+            # check for events
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+            
+            if self.PLAYER_ON_MOVE == WHITE:
+                
+                global GLOBAL_heur_choice
+                GLOBAL_heur_choice = self.heur_choice1
+
+                print('\nAI white on turn.')
+
+                board = set(self.closed_positions.keys())
+                black_pieces = set(self.black_positions_taken.keys())
+                white_pieces = set(self.white_positions_taken.keys())
+
+                if self.NUMBER_OF_PIECES > 0:
+                    self.global_move_counter += 1
+                    # in first stage we only put pieces down, we are never moving them
+                    print('First stage white.')
+                    new_move, evaluation_value, figure_to_kill, _ = alpha_beta(board, self.depth, True, float('-inf'),float('inf'),
+                                                                                           black_pieces, white_pieces, self.NUMBER_OF_PIECES, None)
+                    
+                    print('Move: {}\nFigure to kill: {}'.format(new_move, figure_to_kill))
+
+                    self.trash = self.make_move(self.PLAYER_ON_MOVE, position_on_board[new_move], 3, None)
+
+                    time.sleep(1) # pauzira se program na sekundu da se bolje vidi stavljanje figure i ubijanje
+
+                else:
+                    if self.WHITE_PIECES > 3: print('Second stage white.')
+                    else: print('Third stage white')
+                    self.global_move_counter += 1
+                    new_move, evaluation_value, figure_to_kill, new_place = alpha_beta(board, self.depth, True, float('-inf'),float('inf'),
+                                                                                           black_pieces, white_pieces, self.NUMBER_OF_PIECES, None)
+                    if new_move not in self.white_mill_dict.keys():
+                        global GLOBAL_last_move
+                        GLOBAL_last_move.append((new_move, new_place))
+                        print('WHITE: {}\n{}\n{}'.format(GLOBAL_last_move, self.history_white, self.history_black))
+                        self.history_white = copy.deepcopy(GLOBAL_last_move)
+                        GLOBAL_last_move = copy.deepcopy(self.history_black)
+                    
+                    print('Move: {}\nNew place: {}\nFigure to kill: {}'.format(new_move, new_place, figure_to_kill))
+                    
+                    self.trash = self.make_move(self.PLAYER_ON_MOVE, position_on_board[new_move], 3, new_place)
+
+                if figure_to_kill:
+                    self.kill_piece(WHITE, figure_to_kill)
+                
+                self.PLAYER_ON_MOVE = BLACK
+                self.trash = self.is_mill(BLACK)
+                self.trash = self.is_mill(WHITE)
+                # na kraju postavljas da igra bijeli igrac
+                
+
+            elif self.PLAYER_ON_MOVE == BLACK:
+                
+                global GLOBAL_heur_choice
+                GLOBAL_heur_choice = self.heur_choice2
+
+                print('\nAI black on turn.')
+                
+                board = set(self.closed_positions.keys())
+                black_pieces = set(self.black_positions_taken.keys())
+                white_pieces = set(self.white_positions_taken.keys())
+                
+                if self.NUMBER_OF_PIECES > 0:
+                    self.global_move_counter += 1
+                    # in first stage we only put pieces down, we are never moving them
+                    print('First stage black.')
+                    new_move, evaluation_value, figure_to_kill, _ = alpha_beta(board, self.depth, True, float('-inf'),float('inf'),
+                                                                                           white_pieces, black_pieces, self.NUMBER_OF_PIECES, None)
+                    
+                    print('Move: {}\nFigure to kill: {}'.format(new_move, figure_to_kill))
+
+                    self.trash = self.make_move(self.PLAYER_ON_MOVE, position_on_board[new_move], 1, None)
+
+                    time.sleep(1) # pauzira se program na sekundu da se bolje vidi stavljanje figure i ubijanje
+
+                else:
+                    if self.BLACK_PIECES > 3: print('Second stage black.')
+                    else: print('Third stage black.')
+                    self.global_move_counter += 1
+                    new_move, evaluation_value, figure_to_kill, new_place = alpha_beta(board, self.depth, True, float('-inf'),float('inf'),
+                                                                                           white_pieces, black_pieces, self.NUMBER_OF_PIECES, None)
+                    if new_move not in self.black_mill_dict.keys():
+                        global GLOBAL_last_move
+                        GLOBAL_last_move.append((new_move, new_place))
+                        print('BLACK: {}\n{}\n{}'.format(GLOBAL_last_move, self.history_black, self.history_white))
+                        self.history_black = copy.deepcopy(GLOBAL_last_move)
+                        GLOBAL_last_move = copy.deepcopy(self.history_white)
+
+                    print('Move: {}\nNew place: {}\nFigure to kill: {}'.format(new_move, new_place, figure_to_kill))
+
+                    self.trash = self.make_move(self.PLAYER_ON_MOVE, position_on_board[new_move], 1, new_place)
+
+                if figure_to_kill:
+                    self.kill_piece(BLACK, figure_to_kill)
+                
+                self.PLAYER_ON_MOVE = WHITE
+                self.trash = self.is_mill(WHITE)
+                self.trash = self.is_mill(BLACK)
+
+
+            all_pieces_list.update()
+            all_pieces_list.draw(self.screen)
+            pygame.display.flip()
+
+            if self.global_move_counter == 100:
+                print('Tie game.')
+                time.sleep(5)
+                pygame.quit()
+            # provjera je li doslo do kraja igre
+            if (self.white_positions_taken and not self.NUMBER_OF_PIECES and self.no_legal_moves_game_loss(WHITE)) or self.WHITE_PIECES < 3:
+                print('Black wins.')
+                print('Moves counter: {}'.format(self.global_move_counter))
+                time.sleep(5)
+                pygame.quit()
+            if (self.black_positions_taken and not self.NUMBER_OF_PIECES and self.no_legal_moves_game_loss(BLACK)) or self.BLACK_PIECES < 3:
+                print('White wins.')
+                print('Moves counter: {}'.format(self.global_move_counter))
+                time.sleep(5)
+                pygame.quit()
+            # nerijeseno ispitaj jesi li u fazi dva  ili tri i sve figure koje postoje su u mlinu
+            # TODO: check_draw
+        
+        time.sleep(5)
+        pygame.quit()
 
 
     def gui_settings(self):
@@ -382,32 +558,61 @@ class Game_Board():
             
             # ako je odabir figure dobar, odabrati mjesto za figuru
             #print('Odaberi novu lokaciju... mora biti susjedna')
-            while True:
-                for event in pygame.event.get():
-                    if event.type == pygame.MOUSEBUTTONDOWN:
-                        new_x, new_y = pygame.mouse.get_pos()
-                        key, flag = self.check_position(new_x, new_y)
-                        if flag:
-                            for i in state_space[white_piece.key]:
-                                if i == key:
-                                    #print('Nova odabrana pozicija je: {}'.format(key))
-                                    # dodavanje novog spritea
-                                    white_piece.kill_it()
-                                    new_white = White_Piece(key)
-                                    white_pieces_list.add(new_white)
-                                    all_pieces_list.add(new_white)
-                                    
-                                    all_pieces_list.update()
-                                    all_pieces_list.draw(self.screen)
-                                    self.gui_settings()
-                                    pygame.display.flip()
-                                    
-                                    del self.closed_positions[white_piece.key]
-                                    del self.white_positions_taken[white_piece.key]
-                                    self.closed_positions[key] = position_on_board[key]
-                                    self.white_positions_taken[key] = position_on_board[key]
-                                    #print('Bijele zauzete pozicije: {}'.format(self.white_positions_taken.keys()))
-                                    return True
+            if mode == 3:
+                new_location = new_loc
+                time.sleep(1)
+
+                key, flag = self.check_position(position_on_board[new_location][0], position_on_board[new_location][1])
+                
+                if flag:
+                    for i in state_space[white_piece.key]:
+                        if i == key:
+                            #print('Nova odabrana pozicija je: {}'.format(key))
+                            # dodavanje novog spritea
+                            white_piece.kill_it()
+                            new_white = White_Piece(key)
+                            white_pieces_list.add(new_white)
+                            all_pieces_list.add(new_white)
+
+                            all_pieces_list.update()
+                            all_pieces_list.draw(self.screen)
+                            self.gui_settings()
+                            pygame.display.flip()
+
+                            del self.closed_positions[white_piece.key]
+                            del self.white_positions_taken[white_piece.key]
+                            self.closed_positions[key] = position_on_board[key]
+                            self.white_positions_taken[key] = position_on_board[key]
+                            #print('Bijele zauzete pozicije: {}'.format(self.white_positions_taken.keys()))
+                            return True
+
+            else:
+                while True:
+                    for event in pygame.event.get():
+                        if event.type == pygame.MOUSEBUTTONDOWN:
+                            new_x, new_y = pygame.mouse.get_pos()
+                            key, flag = self.check_position(new_x, new_y)
+                            if flag:
+                                for i in state_space[white_piece.key]:
+                                    if i == key:
+                                        #print('Nova odabrana pozicija je: {}'.format(key))
+                                        # dodavanje novog spritea
+                                        white_piece.kill_it()
+                                        new_white = White_Piece(key)
+                                        white_pieces_list.add(new_white)
+                                        all_pieces_list.add(new_white)
+
+                                        all_pieces_list.update()
+                                        all_pieces_list.draw(self.screen)
+                                        self.gui_settings()
+                                        pygame.display.flip()
+
+                                        del self.closed_positions[white_piece.key]
+                                        del self.white_positions_taken[white_piece.key]
+                                        self.closed_positions[key] = position_on_board[key]
+                                        self.white_positions_taken[key] = position_on_board[key]
+                                        #print('Bijele zauzete pozicije: {}'.format(self.white_positions_taken.keys()))
+                                        return True
 
             return False
 
@@ -438,7 +643,7 @@ class Game_Board():
                 if mode == 2: new_location = input('Upisi novu lokaciju: ')
                 else: 
                     new_location = new_loc
-                    time.sleep(2) # pauzira se program na sekundu da se bolje vidi stavljanje figure i ubijanje
+                    time.sleep(1) # pauzira se program na sekundu da se bolje vidi stavljanje figure i ubijanje
 
                 key, flag = self.check_position(position_on_board[new_location][0], position_on_board[new_location][1])
                 
@@ -480,24 +685,50 @@ class Game_Board():
 
             # ako je odabir figure dobar, odabrati mjesto za figuru
             print('Odaberi novu lokaciju... bilo koju osim one na kojima je vec figurica')
-            while True:
-                for event in pygame.event.get():
-                    if event.type == pygame.MOUSEBUTTONDOWN:
-                        new_x, new_y = pygame.mouse.get_pos()
-                        key, flag = self.check_position(new_x, new_y)
-                        if flag and key not in self.closed_positions:
+            
+            if mode == 3:
+                new_location = new_loc
+                time.sleep(1)
+                
+                key, flag = self.check_position(position_on_board[new_location][0], position_on_board[new_location][1])
+                
+                if flag and key not in self.closed_positions:
+                    #print('Nova odabrana pozicija je: {}'.format(key))
+                    # dodavanje novog spritea
+                    white_piece.kill_it()
+                    new_white = White_Piece(key)
+                    white_pieces_list.add(new_white)
+                    all_pieces_list.add(new_white)
+                    all_pieces_list.update()
+                    all_pieces_list.draw(self.screen)
+                    self.gui_settings()
+                    pygame.display.flip()
+                    del self.closed_positions[white_piece.key]
+                    del self.white_positions_taken[white_piece.key]
+                    self.closed_positions[key] = position_on_board[key]
+                    self.white_positions_taken[key] = position_on_board[key]
+                    #print('Bijele zauzete pozicije: {}'.format(self.white_positions_taken.keys()))
+                    return True
+
+            else:
+                while True:
+                    for event in pygame.event.get():
+                        if event.type == pygame.MOUSEBUTTONDOWN:
+                            new_x, new_y = pygame.mouse.get_pos()
+                            key, flag = self.check_position(new_x, new_y)
+                            if flag and key not in self.closed_positions:
                                 #print('Nova odabrana pozicija je: {}'.format(key))
                                 # dodavanje novog spritea
                                 white_piece.kill_it()
                                 new_white = White_Piece(key)
                                 white_pieces_list.add(new_white)
                                 all_pieces_list.add(new_white)
-                                
+
                                 all_pieces_list.update()
                                 all_pieces_list.draw(self.screen)
                                 self.gui_settings()
                                 pygame.display.flip()
-                                
+
                                 del self.closed_positions[white_piece.key]
                                 del self.white_positions_taken[white_piece.key]
                                 self.closed_positions[key] = position_on_board[key]
@@ -521,7 +752,7 @@ class Game_Board():
                 if mode == 2: new_location = input('Put new location: ')
                 else:
                     new_location = new_loc
-                    time.sleep(2)
+                    time.sleep(1)
 
                 key, flag = self.check_position(position_on_board[new_location][0], position_on_board[new_location][1])
                 
@@ -623,29 +854,55 @@ class Game_Board():
                     all_in_mill = False
                     break
 
-            while not is_killed:
-                for event in pygame.event.get():
-                    if event.type == pygame.MOUSEBUTTONDOWN:
-                        x, y = pygame.mouse.get_pos()
-                        for black_piece in black_pieces_list:
-                            if black_piece.rect.collidepoint(x,y):
-                               if all_in_mill:
-                                    black_piece.kill_it()
-                                    del self.closed_positions[black_piece.key]
-                                    del self.black_positions_taken[black_piece.key]
-                                    self.BLACK_PIECES -= 1
-                                    #print('Preostalo crnih figura: {}'.format(self.BLACK_PIECES))
-                                    is_killed = True
-                                    break
+            if not figure_to_kill:
+                while not is_killed:
+                    for event in pygame.event.get():
+                        if event.type == pygame.MOUSEBUTTONDOWN:
+                            x, y = pygame.mouse.get_pos()
+                            for black_piece in black_pieces_list:
+                                if black_piece.rect.collidepoint(x,y):
+                                   if all_in_mill:
+                                        black_piece.kill_it()
+                                        del self.closed_positions[black_piece.key]
+                                        del self.black_positions_taken[black_piece.key]
+                                        self.BLACK_PIECES -= 1
+                                        #print('Preostalo crnih figura: {}'.format(self.BLACK_PIECES))
+                                        is_killed = True
+                                        break
 
-                               elif black_piece.key not in self.black_mill_dict:
-                                    black_piece.kill_it()
-                                    del self.closed_positions[black_piece.key]
-                                    del self.black_positions_taken[black_piece.key]
-                                    self.BLACK_PIECES -= 1
-                                    #print('Preostalo crnih figura: {}'.format(self.BLACK_PIECES))
-                                    is_killed = True
-                                    break
+                                   elif black_piece.key not in self.black_mill_dict:
+                                        black_piece.kill_it()
+                                        del self.closed_positions[black_piece.key]
+                                        del self.black_positions_taken[black_piece.key]
+                                        self.BLACK_PIECES -= 1
+                                        #print('Preostalo crnih figura: {}'.format(self.BLACK_PIECES))
+                                        is_killed = True
+                                        break
+
+            elif figure_to_kill:
+                key = figure_to_kill
+                for black_piece in black_pieces_list:
+                    if black_piece.key == key:
+                       
+                        if all_in_mill:
+                            
+                            black_piece.kill_it()
+                            del self.closed_positions[black_piece.key]
+                            del self.black_positions_taken[black_piece.key]
+                            self.BLACK_PIECES -= 1
+                            is_killed = True
+                            break
+
+                        elif key not in self.black_mill_dict:
+                            
+                            black_piece.kill_it()
+                            del self.closed_positions[black_piece.key]
+                            del self.black_positions_taken[black_piece.key]
+                            self.BLACK_PIECES -= 1
+                            #print('Preostalo crnih figura: {}'.format(self.BLACK_PIECES))
+                            is_killed = True
+                            break
+
 
         else:
             for k in self.white_positions_taken:
