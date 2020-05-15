@@ -205,8 +205,8 @@ def advanced_heuristic(black, white, number_of_pieces, mill_move_flag, player, d
     white_num_morris, black_num_morris = number_of_morrises(black, white)
     morrises_diff = black_num_morris - white_num_morris
 
-    white_no_adj, black_no_adj = no_adjacent(black, white)
-    no_adj_diff = white_no_adj - black_no_adj # pazi ovdje oduzimas protivnik - igrac jer ti je cilj da protivnik ima sto manje susjednih mjesta slobodno
+    white_no_adj, black_no_adj = blocked_by_piece(black, white)
+    no_adj_diff = black_no_adj - white_no_adj # pazi ovdje oduzimas protivnik - igrac jer ti je cilj da protivnik ima sto manje susjednih mjesta slobodno
 
     white_two_piece, black_two_piece = two_piece_config(black, white)
     two_piece_diff = black_two_piece - white_two_piece
@@ -228,27 +228,28 @@ def advanced_heuristic(black, white, number_of_pieces, mill_move_flag, player, d
 
     elif not player and length_black > 3:
         # u drugoj i trecoj fazi vise cijeni mlinove nego u prvoj
-        if mill_move_flag: evaluation += 15
+        if mill_move_flag: evaluation += 30
         evaluation += morrises_diff * 40
-        evaluation += no_adj_diff * 15
-        evaluation += length_diff * 10
-        evaluation += super_mill_diff * 50
+        evaluation += no_adj_diff * 20
+        evaluation += length_diff * 15
+        evaluation += super_mill_diff * 30
     
     elif player and length_white > 3:
         # u drugoj i trecoj fazi vise cijeni mlinove nego u prvoj
-        if mill_move_flag: evaluation += -15
+        if mill_move_flag: evaluation += -30
         evaluation += morrises_diff * 40
-        evaluation += no_adj_diff * 15
-        evaluation += length_diff * 10
-        evaluation += super_mill_diff * 50
+        evaluation += no_adj_diff * 20
+        evaluation += length_diff * 15
+        evaluation += super_mill_diff * 30
 
     else:
         if player:
-            if mill_move_flag: evaluation += -15
+            if mill_move_flag: evaluation += -50
         else:
-            evaluation += 15
+            evaluation += 50
         evaluation += two_piece_diff * 10
         evaluation += three_piece_diff * 2
+        
         
     if depth == board_with_ai.GLOBAL_search_depth - 1:
         if mill_move_flag:

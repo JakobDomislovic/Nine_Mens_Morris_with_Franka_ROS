@@ -50,6 +50,9 @@ class Game_Board():
         global GLOBAL_heur_choice
         GLOBAL_heur_choice = heuristic_choice
 
+        global GLOBAL_last_move
+        GLOBAL_last_move = []
+
         self.history_white = []
         self.history_black = []
 
@@ -365,15 +368,15 @@ class Game_Board():
                     self.global_move_counter += 1
                     new_move, evaluation_value, figure_to_kill, new_place = alpha_beta(board, self.depth, True, float('-inf'),float('inf'),
                                                                                            black_pieces, white_pieces, self.NUMBER_OF_PIECES, None)
+                    
                     if new_move not in self.white_mill_dict.keys():
                         global GLOBAL_last_move
-                        GLOBAL_last_move.append((new_move, new_place))
+                        GLOBAL_last_move = copy.deepcopy([(new_move, new_place)])
                         print('WHITE: {}\n{}\n{}'.format(GLOBAL_last_move, self.history_white, self.history_black))
                         self.history_white = copy.deepcopy(GLOBAL_last_move)
                         GLOBAL_last_move = copy.deepcopy(self.history_black)
                     
                     print('Move: {}\nNew place: {}\nFigure to kill: {}'.format(new_move, new_place, figure_to_kill))
-                    
                     self.trash = self.make_move(self.PLAYER_ON_MOVE, position_on_board[new_move], 3, new_place)
 
                 if figure_to_kill:
@@ -415,16 +418,17 @@ class Game_Board():
                     self.global_move_counter += 1
                     new_move, evaluation_value, figure_to_kill, new_place = alpha_beta(board, self.depth, True, float('-inf'),float('inf'),
                                                                                            white_pieces, black_pieces, self.NUMBER_OF_PIECES, None)
+                    
                     if new_move not in self.black_mill_dict.keys():
                         global GLOBAL_last_move
-                        GLOBAL_last_move.append((new_move, new_place))
+                        GLOBAL_last_move = copy.deepcopy([(new_move, new_place)])
                         print('BLACK: {}\n{}\n{}'.format(GLOBAL_last_move, self.history_black, self.history_white))
                         self.history_black = copy.deepcopy(GLOBAL_last_move)
                         GLOBAL_last_move = copy.deepcopy(self.history_white)
 
                     print('Move: {}\nNew place: {}\nFigure to kill: {}'.format(new_move, new_place, figure_to_kill))
-
                     self.trash = self.make_move(self.PLAYER_ON_MOVE, position_on_board[new_move], 1, new_place)
+
 
                 if figure_to_kill:
                     self.kill_piece(BLACK, figure_to_kill)

@@ -199,7 +199,7 @@ def alpha_beta(board, depth, max_player, alpha, beta, white_pieces, black_pieces
             _ , from_min, _, _ = alpha_beta(new_board, depth-1, False, current_evaluation_max, beta,
                                             white, black, number_of_pieces, is_Mill_move)
             
-            #if depth == 5: print(from_min, current_evaluation_max, move, new_place, is_Mill_move, len(black), len(white))
+            #if depth == 4: print(from_min, current_evaluation_max, move, new_place, is_Mill_move, len(black), len(white))
 
             # -------------------------------------provjera MAX
             if current_evaluation_max >= from_min:
@@ -226,9 +226,10 @@ def alpha_beta(board, depth, max_player, alpha, beta, white_pieces, black_pieces
             if current_evaluation_max >= beta: return None, beta, None, None
 
         if flag2:
-            #print(current_evaluation_max)
-            #print(current_move_max)
-            #print(current_new_place)
+            # print('Posljednji potez')
+            # print(current_evaluation_max)
+            # print(current_move_max)
+            # print(current_new_place)
             if mill_flag_black: 
                 return current_move_max, current_evaluation_max, mill_move_black, current_new_place
             else: return current_move_max, current_evaluation_max, None, current_new_place
@@ -426,10 +427,12 @@ def possible_moves_list(board_x, black_x, white_x, max_player, stage, depth):
             for adjacent in state_space[figure]:
 
                 if depth == board_with_ai.GLOBAL_search_depth and board_with_ai.GLOBAL_last_move:
-                    compare0 = board_with_ai.GLOBAL_last_move[0][0]
-                    compare1 = board_with_ai.GLOBAL_last_move[0][1]
-                    if adjacent == compare0 and figure == compare1:
-                        board_with_ai.GLOBAL_last_move.pop()
+                    compare0 = board_with_ai.GLOBAL_last_move[0][1] # figura koju trenutno promatras ista kao novi potez u proslom koraku
+                    compare1 = board_with_ai.GLOBAL_last_move[0][0] # ako je susjedni (novo moguce polje) isti kao proslo mjesto s kojeg smo krenuli
+                    print(figure, compare0)
+                    print(adjacent, compare1)
+                    if figure == compare0 and adjacent == compare1:
+                        board_with_ai.GLOBAL_last_move = []
                         continue
 
                 if adjacent in board: continue
@@ -488,7 +491,7 @@ def possible_moves_list(board_x, black_x, white_x, max_player, stage, depth):
                     compare0 = board_with_ai.GLOBAL_last_move[0][0]
                     compare1 = board_with_ai.GLOBAL_last_move[0][1]
                     if move == compare0 and compare1 == figure:
-                        board_with_ai.GLOBAL_last_move.pop()
+                        board_with_ai.GLOBAL_last_move = []
                         continue
 
                 if move in board: continue
