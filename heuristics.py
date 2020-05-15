@@ -1,6 +1,7 @@
 from state_space_descriptor import state_space, super_move_formations, mill_combinations
 import board_with_ai # global variable GLOBAL_search_depth
 
+import copy
 
 def number_of_pieces_heuristic(black, white, number_of_pieces, mill_move_flag, player, depth):
     '''
@@ -22,11 +23,11 @@ def number_of_pieces_heuristic(black, white, number_of_pieces, mill_move_flag, p
             if player: 
                 evaluation += -10000
                 if depth == board_with_ai.GLOBAL_search_depth - 1: 
-                    evaluation += -1000
+                    evaluation += -10000
             else: 
                 evaluation += 10000
                 if depth == board_with_ai.GLOBAL_search_depth - 1: 
-                    evaluation += 1000
+                    evaluation += 10000
         
     return evaluation
 
@@ -196,7 +197,32 @@ def try_different_mills(black, white, number_of_pieces, mill_move_flag, player, 
 
 
 def advanced_heuristic(black, white, number_of_pieces, mill_move_flag, player, depth):
+    
     evaluation = 0
+
+    if number_of_pieces:
+        black_branch_factor = branch_factor(black.union(white), black, white, not player, 1, depth)
+        white_branch_factor = branch_factor(black.union(white), black, white, player, 1, depth)
+
+    else:
+        if len(black) > 3:
+            black_branch_factor = branch_factor(black.union(white), black, white, not player, 2, depth)
+        else:
+            black_branch_factor = branch_factor(black.union(white), black, white, not player, 3, depth)
+        
+        if len(white) > 3:
+            white_branch_factor = branch_factor(black.union(white), black, white, player, 2, depth)
+        else:
+            white_branch_factor = branch_factor(black.union(white), black, white, player, 3, depth)
+        
+        #if len(black) == 3:
+        #    print('crni = 3')
+        #    black_branch_factor = branch_factor(black.union(white), black, white, not player, 3, depth)    
+        
+        #if len(white) == 3:
+    
+    
+    branch_factor_diff = black_branch_factor - white_branch_factor
 
     length_black = len(black)
     length_white = len(white)
@@ -205,8 +231,8 @@ def advanced_heuristic(black, white, number_of_pieces, mill_move_flag, player, d
     white_num_morris, black_num_morris = number_of_morrises(black, white)
     morrises_diff = black_num_morris - white_num_morris
 
-    white_no_adj, black_no_adj = blocked_by_piece(black, white)
-    no_adj_diff = black_no_adj - white_no_adj # pazi ovdje oduzimas protivnik - igrac jer ti je cilj da protivnik ima sto manje susjednih mjesta slobodno
+    white_no_adj, black_no_adj = no_adjacent(black, white)
+    no_adj_diff = white_no_adj - black_no_adj # pazi ovdje oduzimas protivnik - igrac jer ti je cilj da protivnik ima sto manje susjednih mjesta slobodno
 
     white_two_piece, black_two_piece = two_piece_config(black, white)
     two_piece_diff = black_two_piece - white_two_piece
@@ -221,34 +247,40 @@ def advanced_heuristic(black, white, number_of_pieces, mill_move_flag, player, d
         # first stage
         if mill_move_flag: evaluation += 20
         evaluation += morrises_diff * 30
-        evaluation += no_adj_diff * 2
-        evaluation += length_diff * 10
+        evaluation += no_adj_diff * 10
+        evaluation += length_diff * 30
         evaluation += two_piece_diff * 15
         evaluation += three_piece_diff * 7
+        evaluation += branch_factor_diff * 5
+
 
     elif not player and length_black > 3:
         # u drugoj i trecoj fazi vise cijeni mlinove nego u prvoj
         if mill_move_flag: evaluation += 30
         evaluation += morrises_diff * 40
         evaluation += no_adj_diff * 20
-        evaluation += length_diff * 15
+        evaluation += length_diff * 50
         evaluation += super_mill_diff * 30
-    
+        evaluation += branch_factor_diff * 30
+
     elif player and length_white > 3:
         # u drugoj i trecoj fazi vise cijeni mlinove nego u prvoj
         if mill_move_flag: evaluation += -30
         evaluation += morrises_diff * 40
         evaluation += no_adj_diff * 20
-        evaluation += length_diff * 15
+        evaluation += length_diff * 50
         evaluation += super_mill_diff * 30
+        evaluation += branch_factor_diff * 30
 
     else:
         if player:
             if mill_move_flag: evaluation += -50
         else:
             evaluation += 50
+        evaluation += length_diff * 30
         evaluation += two_piece_diff * 10
         evaluation += three_piece_diff * 2
+        evaluation += branch_factor_diff * 1
         
         
     if depth == board_with_ai.GLOBAL_search_depth - 1:
@@ -260,6 +292,32 @@ def advanced_heuristic(black, white, number_of_pieces, mill_move_flag, player, d
 
     return evaluation
 
+def branch_factor_heuristic(black, white, number_of_pieces, mill_move_flag, player, depth):
+    
+    evaluation = 0
+    
+    if number_of_pieces:
+        black_branch_factor = branch_factor(black.union(white), black, white, not player, 1, depth)
+        white_branch_factor = branch_factor(black.union(white), black, white, player, 1, depth)
+
+    if len(black) > 3:
+        black_branch_factor = branch_factor(black.union(white), black, white, not player, 2, depth)
+    
+    if len(white) > 3:
+        white_branch_factor = branch_factor(black.union(white), black, white, player, 2, depth)
+    
+    if len(black) == 3:
+        black_branch_factor = branch_factor(black.union(white), black, white, not player, 3, depth)
+        
+    if len(white) == 3:
+        white_branch_factor = branch_factor(black.union(white), black, white, player, 3, depth)
+    
+    branch_factor_diff = black_branch_factor - white_branch_factor
+
+    if number_of_pieces:
+        return branch_factor_diff * 10
+    else:
+        return branch_factor_diff * 30
 
 
 ########################################      HELPER FUNCTIONS      ########################################
@@ -394,6 +452,196 @@ def number_of_morrises(black, white):
 
 
 
+def is_Mill(color, move):
+    
+    for mill in mill_combinations:
+        help2 = set()
+        
+        for t in mill: help2.add(t)
+        
+        if move in help2 and help2.issubset(color):
+            return True
+
+    return False 
+
+
+def is_Terminal(board, player, white, black):
+    
+    if not player:
+        if len(white) < 3 and len(board) >= 5:  # minimalno na ploci moze biti 5 igraca
+            return True
+        if len(white) > 3:
+            for k in white:
+                for i in state_space[k]:
+                    if i not in board: return False # cim se nade slobodna susjedna pozicija nije terminal
+            return True
+
+    else:
+        if len(black) < 3 and len(board) >= 5: # minimalno na ploci moze biti 5 igraca
+            return True
+
+        if len(black) > 3:
+            for k in black:
+                for i in state_space[k]:
+                    if i not in board: return False # cim se nade slobodna susjedna pozicija nije terminal
+            return True
+
+
+def branch_factor(board_x, black_x, white_x, max_player, stage, depth):
+    
+    # razmisli treba li ti uopce 'deepcopy', to je O(n)
+
+    not_in_mill = set()
+    board = copy.deepcopy(board_x)
+    
+    board_list = []
+    first_col_list = []
+    second_col_list = []
+
+    in_mill_flag_list = []
+
+    if max_player:
+        
+        first_col = copy.deepcopy(black_x)
+        second_col = copy.deepcopy(white_x)
+
+        initial_second = copy.deepcopy(white_x)
+        help4 = set()
+
+        if len(white_x) == 3: not_in_mill = white_x
+        else:
+            for m in mill_combinations:
+                help1 = set()
+                for t in m: help1.add(t)
+                for i in white_x:
+                    not_in_mill.add(i)
+                    if i in help1 and help1.issubset(white_x):
+                        help4.add(i)
+
+            if help4 == white_x: not_in_mill = white_x   # ako su sve figure u mlinu onda smijes ubiti bilo koju 
+            else: not_in_mill.difference_update(help4)
+    
+    else:
+        
+        first_col = copy.deepcopy(white_x)
+        second_col = copy.deepcopy(black_x)
+ 
+        initial_second = copy.deepcopy(black_x)
+        help4 = set()
+
+        if len(black_x) == 3: not_in_mill = black_x
+        else:
+            for m in mill_combinations:
+                help1 = set()
+                for t in m: help1.add(t)
+                for i in black_x:
+                    not_in_mill.add(i)
+                    if i in help1 and help1.issubset(black_x):
+                        help4.add(i)
+
+            if help4 == black_x: not_in_mill = black_x   # ako su sve figure u mlinu onda smijes ubiti bilo koju 
+            else: not_in_mill.difference_update(help4)
+    
+    if stage == 1:
+        
+        for move in state_space.keys():
+
+            if move in board: continue
+
+            help2 = set()
+            help2 = first_col.union({move})
+
+            first_col_list.append(help2)
+
+            if not_in_mill and is_Mill(help2, move):
+
+                for fig in not_in_mill:
+
+                    in_mill_flag_list.append(True)
+
+                continue
+
+            in_mill_flag_list.append(False)
+
+        return len(in_mill_flag_list)
+
+    
+    elif stage == 2:
+
+        for figure in first_col:
+           
+            help_first_col = first_col.difference({figure})
+            
+            for adjacent in state_space[figure]:
+
+                if depth == board_with_ai.GLOBAL_search_depth and board_with_ai.GLOBAL_last_move:
+                    compare0 = board_with_ai.GLOBAL_last_move[0][1] # figura koju trenutno promatras ista kao novi potez u proslom koraku
+                    compare1 = board_with_ai.GLOBAL_last_move[0][0] # ako je susjedni (novo moguce polje) isti kao proslo mjesto s kojeg smo krenuli
+                    #print(figure, compare0)
+                    #print(adjacent, compare1)
+                    if figure == compare0 and adjacent == compare1:
+                        #print('Brisanje stage 2')
+                        #board_with_ai.GLOBAL_last_move = []
+                        continue
+
+                if adjacent in board: continue
+
+                help2 = set()
+                help2 = help_first_col.union({adjacent})
+                
+                first_col_list.append(help2)
+
+                if not_in_mill and is_Mill(help2, adjacent):
+
+                    for fig in not_in_mill:
+
+                        in_mill_flag_list.append(True)
+
+                    continue
+
+                in_mill_flag_list.append(False)
+        
+        return len(in_mill_flag_list)
+
+
+    else: # stage 3, similar to stage 2
+        
+     
+        for figure in first_col:
+           
+            help_board = board.difference({figure})
+            help_first_col = first_col.difference({figure})
+            
+            for move in state_space.keys(): # only difference between stage 2 and 3 is that in stage 3 we can move on any free field
+                
+                if depth == board_with_ai.GLOBAL_search_depth and board_with_ai.GLOBAL_last_move:
+                    compare0 = board_with_ai.GLOBAL_last_move[0][0]
+                    compare1 = board_with_ai.GLOBAL_last_move[0][1]
+                    if move == compare0 and compare1 == figure:
+                        #print('Brisanje stage 3')
+                        #board_with_ai.GLOBAL_last_move = []
+                        continue
+
+                if move in board: continue
+
+                
+                help2 = set()
+                help2 = help_first_col.union({move})
+                
+                first_col_list.append(help2)
+
+                if not_in_mill and is_Mill(help2, move):
+
+                    for fig in not_in_mill:
+
+                        in_mill_flag_list.append(True)
+
+                    continue
+
+                in_mill_flag_list.append(False)
+        
+       
+        return len(in_mill_flag_list)
 
 
 

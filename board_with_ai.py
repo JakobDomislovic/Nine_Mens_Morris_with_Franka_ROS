@@ -211,8 +211,7 @@ class Game_Board():
                     self.make_mill_move_white = False
                     self.trash = self.is_mill(BLACK)
                     #print('Crne figure nakon mlina: {}'.format(self.black_positions_taken.keys()))
-                    
-
+            
             elif self.PLAYER_ON_MOVE == BLACK:
                 print('\nAI on turn.')
                 
@@ -243,6 +242,18 @@ class Game_Board():
                     self.global_move_counter += 1
                     new_move, evaluation_value, figure_to_kill, new_place = alpha_beta(board, self.depth, True, float('-inf'),float('inf'),
                                                                                            white_pieces, black_pieces, self.NUMBER_OF_PIECES, None)
+                    
+                    if not new_move:
+                        all_pieces_list.update()
+                        all_pieces_list.draw(self.screen)
+                        pygame.display.flip()
+                        print('White wins. There are no legal moves for Black player.')
+                        print('Moves counter: {}'.format(self.global_move_counter))
+                        time.sleep(10)
+                        self.running = False
+                        self.PLAYER_ON_MOVE = None
+                        continue
+
                     print('Move: {}\nNew place: {}\nFigure to kill: {}'.format(new_move, new_place, figure_to_kill))
                     
                     self.trash = self.make_move(self.PLAYER_ON_MOVE, position_on_board[new_move], 1, new_place)
@@ -258,7 +269,9 @@ class Game_Board():
                 self.trash = self.is_mill(WHITE)
                 self.trash = self.is_mill(BLACK)
                 # na kraju postavljas da igra bijeli igrac
+                
                 print('\nWhite player on turn.')
+                
                 if self.NUMBER_OF_PIECES: print('PRVA FAZA BIJELI:')
                 elif not self.NUMBER_OF_PIECES and self.WHITE_PIECES > 3: print('DRUGA FAZA BIJELI. upisi prvo poziciju koju zelis pomaknuti onda kamo pomaknuti')
                 else: print('Treca faza, klinki prvo poziciju kojeg zelis maknuti onda kamo.')
@@ -274,6 +287,7 @@ class Game_Board():
                 time.sleep(5)
                 pygame.quit()
             # provjera je li doslo do kraja igre
+            
             if (self.white_positions_taken and not self.NUMBER_OF_PIECES and self.no_legal_moves_game_loss(WHITE)) or self.WHITE_PIECES < 3:
                 print('Black wins.')
                 print('Moves counter: {}'.format(self.global_move_counter))
@@ -328,7 +342,6 @@ class Game_Board():
         all_pieces_list.draw(self.screen)
         pygame.display.flip()
 
-
         while self.running:
 
             self.gui_settings()
@@ -359,20 +372,29 @@ class Game_Board():
                     print('Move: {}\nFigure to kill: {}'.format(new_move, figure_to_kill))
 
                     self.trash = self.make_move(self.PLAYER_ON_MOVE, position_on_board[new_move], 3, None)
-
-                    time.sleep(1) # pauzira se program na sekundu da se bolje vidi stavljanje figure i ubijanje
-
+                    
+                    
                 else:
+
                     if self.WHITE_PIECES > 3: print('Second stage white.')
                     else: print('Third stage white')
                     self.global_move_counter += 1
                     new_move, evaluation_value, figure_to_kill, new_place = alpha_beta(board, self.depth, True, float('-inf'),float('inf'),
                                                                                            black_pieces, white_pieces, self.NUMBER_OF_PIECES, None)
                     
+                    if not new_move:
+                        all_pieces_list.update()
+                        all_pieces_list.draw(self.screen)
+                        pygame.display.flip()
+                        print('Black wins. There are no legal moves for White player.')
+                        print('Moves counter: {}'.format(self.global_move_counter))
+                        time.sleep(20)
+                        exit()
+
                     if new_move not in self.white_mill_dict.keys():
                         global GLOBAL_last_move
                         GLOBAL_last_move = copy.deepcopy([(new_move, new_place)])
-                        print('WHITE: {}\n{}\n{}'.format(GLOBAL_last_move, self.history_white, self.history_black))
+                        #print('WHITE: {}\n{}\n{}'.format(GLOBAL_last_move, self.history_white, self.history_black))
                         self.history_white = copy.deepcopy(GLOBAL_last_move)
                         GLOBAL_last_move = copy.deepcopy(self.history_black)
                     
@@ -387,6 +409,8 @@ class Game_Board():
                 self.trash = self.is_mill(WHITE)
                 # na kraju postavljas da igra bijeli igrac
                 
+                #time.sleep(1) # pauzira se program na sekundu da se bolje vidi stavljanje figure i ubijanje
+
 
             elif self.PLAYER_ON_MOVE == BLACK:
                 
@@ -418,11 +442,20 @@ class Game_Board():
                     self.global_move_counter += 1
                     new_move, evaluation_value, figure_to_kill, new_place = alpha_beta(board, self.depth, True, float('-inf'),float('inf'),
                                                                                            white_pieces, black_pieces, self.NUMBER_OF_PIECES, None)
-                    
+
+                    if not new_move:
+                        all_pieces_list.update()
+                        all_pieces_list.draw(self.screen)
+                        pygame.display.flip()
+                        print('White wins. There are no legal moves for Black player.')
+                        print('Moves counter: {}'.format(self.global_move_counter))
+                        time.sleep(20)
+                        exit()
+
                     if new_move not in self.black_mill_dict.keys():
                         global GLOBAL_last_move
                         GLOBAL_last_move = copy.deepcopy([(new_move, new_place)])
-                        print('BLACK: {}\n{}\n{}'.format(GLOBAL_last_move, self.history_black, self.history_white))
+                        #print('BLACK: {}\n{}\n{}'.format(GLOBAL_last_move, self.history_black, self.history_white))
                         self.history_black = copy.deepcopy(GLOBAL_last_move)
                         GLOBAL_last_move = copy.deepcopy(self.history_white)
 
@@ -441,24 +474,26 @@ class Game_Board():
             all_pieces_list.update()
             all_pieces_list.draw(self.screen)
             pygame.display.flip()
+            time.sleep(1)
 
-            if self.global_move_counter == 100:
+            if self.global_move_counter >= 100:
                 print('Tie game.')
-                time.sleep(5)
-                pygame.quit()
-            # provjera je li doslo do kraja igre
-            if (self.white_positions_taken and not self.NUMBER_OF_PIECES and self.no_legal_moves_game_loss(WHITE)) or self.WHITE_PIECES < 3:
-                print('Black wins.')
                 print('Moves counter: {}'.format(self.global_move_counter))
                 time.sleep(5)
-                pygame.quit()
+                exit()
+
+            # provjera je li doslo do kraja igre
+            if (self.white_positions_taken and not self.NUMBER_OF_PIECES and self.no_legal_moves_game_loss(WHITE)) or self.WHITE_PIECES < 3:
+                print('\nBlack wins.')
+                print('Moves counter: {}'.format(self.global_move_counter))
+                time.sleep(5)
+                exit()
+
             if (self.black_positions_taken and not self.NUMBER_OF_PIECES and self.no_legal_moves_game_loss(BLACK)) or self.BLACK_PIECES < 3:
                 print('White wins.')
                 print('Moves counter: {}'.format(self.global_move_counter))
                 time.sleep(5)
-                pygame.quit()
-            # nerijeseno ispitaj jesi li u fazi dva  ili tri i sve figure koje postoje su u mlinu
-            # TODO: check_draw
+                exit()
         
         time.sleep(5)
         pygame.quit()
@@ -644,7 +679,7 @@ class Game_Board():
             
             #print('Odaberi lokaciju kamo ces premjestiti figuru.')
             while True:
-                if mode == 2: new_location = input('Upisi novu lokaciju: ')
+                if mode == 2: new_location = input('New location: ')
                 else: 
                     new_location = new_loc
                     time.sleep(1) # pauzira se program na sekundu da se bolje vidi stavljanje figure i ubijanje
@@ -688,7 +723,7 @@ class Game_Board():
             pygame.display.flip()
 
             # ako je odabir figure dobar, odabrati mjesto za figuru
-            print('Odaberi novu lokaciju... bilo koju osim one na kojima je vec figurica')
+            print('New location in third stage.')
             
             if mode == 3:
                 new_location = new_loc
@@ -753,7 +788,7 @@ class Game_Board():
 
             #print('Choose new location.')
             while True:
-                if mode == 2: new_location = input('Put new location: ')
+                if mode == 2: new_location = input('Write new location: ')
                 else:
                     new_location = new_loc
                     time.sleep(1)
@@ -830,7 +865,7 @@ class Game_Board():
         ako nemas legalnih poteza gubis vracas True, ako imas False
         '''
         
-        if self.BLACK_PIECES > 3 or self.WHITE_PIECES > 3: return False
+        if self.BLACK_PIECES == 3 or self.WHITE_PIECES  == 3: return False
 
         if col == WHITE:
             for k in self.white_positions_taken:

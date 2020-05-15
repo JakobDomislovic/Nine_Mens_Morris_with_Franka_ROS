@@ -6,6 +6,7 @@ from heuristics import number_of_blocked_pieces
 from heuristics import try_2_block_pieces # testing
 from heuristics import try_different_mills #testing
 from heuristics import advanced_heuristic #testing
+from heuristics import branch_factor_heuristic 
 
 import copy
 import board_with_ai
@@ -81,10 +82,16 @@ def alpha_beta(board, depth, max_player, alpha, beta, white_pieces, black_pieces
             elif board_with_ai.GLOBAL_heur_choice == 3:
                 if max_player: return None, -100000+try_different_mills(black_pieces, white_pieces, number_of_pieces, mill_move_flag, max_player, depth), None, None
                 else: return None, 100000+try_different_mills(black_pieces, white_pieces, number_of_pieces, mill_move_flag, max_player, depth), None, None
+            
             elif board_with_ai.GLOBAL_heur_choice == 4:
                 if max_player: return None, -100000+advanced_heuristic(black_pieces, white_pieces, number_of_pieces, mill_move_flag, max_player, depth), None, None
                 else: return None, 100000+advanced_heuristic(black_pieces, white_pieces, number_of_pieces, mill_move_flag, max_player, depth), None, None
             
+            elif board_with_ai.GLOBAL_heur_choice == 5:
+                if max_player: return None, -100000+branch_factor_heuristic(black_pieces, white_pieces, number_of_pieces, mill_move_flag, max_player, depth), None, None
+                else: return None, 100000+branch_factor_heuristic(black_pieces, white_pieces, number_of_pieces, mill_move_flag, max_player, depth), None, None
+            
+
     if depth == 0:
         if board_with_ai.GLOBAL_heur_choice == 1: return None, number_of_pieces_heuristic(black_pieces, white_pieces, number_of_pieces, mill_move_flag, max_player, depth), None, None
         
@@ -94,6 +101,8 @@ def alpha_beta(board, depth, max_player, alpha, beta, white_pieces, black_pieces
         
         elif board_with_ai.GLOBAL_heur_choice == 4: return None, advanced_heuristic(black_pieces, white_pieces, number_of_pieces, mill_move_flag, max_player, depth), None, None
 
+        elif board_with_ai.GLOBAL_heur_choice == 5: return None, branch_factor_heuristic(black_pieces, white_pieces, number_of_pieces, mill_move_flag, max_player, depth), None, None
+    
     ##################### possible moves for every stage of the game ####################
 
     if number_of_pieces > 0:
@@ -199,7 +208,7 @@ def alpha_beta(board, depth, max_player, alpha, beta, white_pieces, black_pieces
             _ , from_min, _, _ = alpha_beta(new_board, depth-1, False, current_evaluation_max, beta,
                                             white, black, number_of_pieces, is_Mill_move)
             
-            #if depth == 4: print(from_min, current_evaluation_max, move, new_place, is_Mill_move, len(black), len(white))
+            #if depth == 3: print(from_min, current_evaluation_max, move, new_place, is_Mill_move, len(black), len(white))
 
             # -------------------------------------provjera MAX
             if current_evaluation_max >= from_min:
@@ -429,9 +438,10 @@ def possible_moves_list(board_x, black_x, white_x, max_player, stage, depth):
                 if depth == board_with_ai.GLOBAL_search_depth and board_with_ai.GLOBAL_last_move:
                     compare0 = board_with_ai.GLOBAL_last_move[0][1] # figura koju trenutno promatras ista kao novi potez u proslom koraku
                     compare1 = board_with_ai.GLOBAL_last_move[0][0] # ako je susjedni (novo moguce polje) isti kao proslo mjesto s kojeg smo krenuli
-                    print(figure, compare0)
-                    print(adjacent, compare1)
+                    #print(figure, compare0)
+                    #print(adjacent, compare1)
                     if figure == compare0 and adjacent == compare1:
+                        #print('Brisanje stage 2')
                         board_with_ai.GLOBAL_last_move = []
                         continue
 
@@ -491,6 +501,7 @@ def possible_moves_list(board_x, black_x, white_x, max_player, stage, depth):
                     compare0 = board_with_ai.GLOBAL_last_move[0][0]
                     compare1 = board_with_ai.GLOBAL_last_move[0][1]
                     if move == compare0 and compare1 == figure:
+                        #print('Brisanje stage 3')
                         board_with_ai.GLOBAL_last_move = []
                         continue
 
