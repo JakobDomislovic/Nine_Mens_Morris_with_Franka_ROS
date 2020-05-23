@@ -1,12 +1,17 @@
 from board_with_ai import *
 import pygame
+from alpha_beta_pruning import GLOBAL_alfa_cnt, GLOBAL_beta_cnt, GLOBAL_node_max_cnt, GLOBAL_node_min_cnt
+
 
 global_depth_variable = 0
 
 if __name__ == "__main__":
     
     global global_depth_variable
-    
+    global_depth_variable = 0
+    global GLOBAL_alfa_cnt, GLOBAL_beta_cnt, GLOBAL_node_max_cnt, GLOBAL_node_min_cnt
+    GLOBAL_alfa_cnt, GLOBAL_beta_cnt, GLOBAL_node_max_cnt, GLOBAL_node_min_cnt = 0,0,0,0
+                    
     try:
         print('Game modes:\n  Player vs. AI     [1]\n  Player vs. Player [2]\n  AI vs. AI         [3]')
         mode = input('Choose game mode: ')

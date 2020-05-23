@@ -200,29 +200,24 @@ def advanced_heuristic(black, white, number_of_pieces, mill_move_flag, player, d
     
     evaluation = 0
 
-    if number_of_pieces:
-        black_branch_factor = branch_factor(black.union(white), black, white, not player, 1, depth)
-        white_branch_factor = branch_factor(black.union(white), black, white, player, 1, depth)
+    # if number_of_pieces:
+    #     black_branch_factor = branch_factor(black.union(white), black, white, not player, 1, depth)
+    #     white_branch_factor = branch_factor(black.union(white), black, white, player, 1, depth)
 
-    else:
-        if len(black) > 3:
-            black_branch_factor = branch_factor(black.union(white), black, white, not player, 2, depth)
-        else:
-            black_branch_factor = branch_factor(black.union(white), black, white, not player, 3, depth)
+    # else:
+    #     if len(black) > 3:
+    #         black_branch_factor = branch_factor(black.union(white), black, white, not player, 2, depth)
+    #     else:
+    #         black_branch_factor = branch_factor(black.union(white), black, white, not player, 3, depth)
         
-        if len(white) > 3:
-            white_branch_factor = branch_factor(black.union(white), black, white, player, 2, depth)
-        else:
-            white_branch_factor = branch_factor(black.union(white), black, white, player, 3, depth)
+    #     if len(white) > 3:
+    #         white_branch_factor = branch_factor(black.union(white), black, white, player, 2, depth)
+    #     else:
+    #         white_branch_factor = branch_factor(black.union(white), black, white, player, 3, depth)
         
-        #if len(black) == 3:
-        #    print('crni = 3')
-        #    black_branch_factor = branch_factor(black.union(white), black, white, not player, 3, depth)    
-        
-        #if len(white) == 3:
     
     
-    branch_factor_diff = black_branch_factor - white_branch_factor
+    # branch_factor_diff = black_branch_factor - white_branch_factor
 
     length_black = len(black)
     length_white = len(white)
@@ -251,26 +246,26 @@ def advanced_heuristic(black, white, number_of_pieces, mill_move_flag, player, d
         evaluation += length_diff * 30
         evaluation += two_piece_diff * 15
         evaluation += three_piece_diff * 7
-        evaluation += branch_factor_diff * 5
+        #evaluation += branch_factor_diff * 5
 
 
     elif not player and length_black > 3:
         # u drugoj i trecoj fazi vise cijeni mlinove nego u prvoj
         if mill_move_flag: evaluation += 30
         evaluation += morrises_diff * 40
-        evaluation += no_adj_diff * 20
+        evaluation += no_adj_diff * 50
         evaluation += length_diff * 50
         evaluation += super_mill_diff * 30
-        evaluation += branch_factor_diff * 30
+        #evaluation += branch_factor_diff * 30
 
     elif player and length_white > 3:
         # u drugoj i trecoj fazi vise cijeni mlinove nego u prvoj
         if mill_move_flag: evaluation += -30
         evaluation += morrises_diff * 40
-        evaluation += no_adj_diff * 20
+        evaluation += no_adj_diff * 50
         evaluation += length_diff * 50
         evaluation += super_mill_diff * 30
-        evaluation += branch_factor_diff * 30
+        #evaluation += branch_factor_diff * 30
 
     else:
         if player:
@@ -280,7 +275,7 @@ def advanced_heuristic(black, white, number_of_pieces, mill_move_flag, player, d
         evaluation += length_diff * 30
         evaluation += two_piece_diff * 10
         evaluation += three_piece_diff * 2
-        evaluation += branch_factor_diff * 1
+        #evaluation += branch_factor_diff * 1
         
         
     if depth == board_with_ai.GLOBAL_search_depth - 1:

@@ -1,6 +1,8 @@
 from state_space_descriptor import state_space, position_on_board, mill_combinations
 
-from alpha_beta_pruning import alpha_beta
+from alpha_beta_pruning import alpha_beta, mini_max
+import alpha_beta_pruning as abp
+#import GLOBAL_alfa_cnt, GLOBAL_beta_cnt, GLOBAL_node_max_cnt, GLOBAL_node_min_cnt
 
 import numpy as np
 import pygame
@@ -24,6 +26,7 @@ PIECE_SIZE = 25              # piece radius
 GLOBAL_search_depth = 0
 GLOBAL_heur_choice = 0
 GLOBAL_last_move = []
+
 
 # group of sprites
 all_pieces_list = pygame.sprite.Group() # pozivas kad oces sve uploadati na ekran
@@ -55,6 +58,18 @@ class Game_Board():
 
         self.history_white = []
         self.history_black = []
+        
+        global GLOBAL_alfa_cnt, GLOBAL_beta_cnt, GLOBAL_node_max_cnt, GLOBAL_node_min_cnt
+        GLOBAL_alfa_cnt, GLOBAL_beta_cnt, GLOBAL_node_max_cnt, GLOBAL_node_min_cnt = 10,10,10,10
+        
+        self.A_prop_WHITE = []
+        self.B_prop_WHITE = []
+        self.time_WHITE = []
+        self.time_mini_WHITE = []
+        self.A_prop_BLACK = []
+        self.B_prop_BLACK = []
+        self.time_BLACK = []
+        self.time_mini_BLACK = []
 
         self.mouse_click = False
 
@@ -366,9 +381,29 @@ class Game_Board():
                     self.global_move_counter += 1
                     # in first stage we only put pieces down, we are never moving them
                     print('First stage white.')
+
+                    # ######################## MINIMAX - NEMA PODREZIVANJA #########################
+                    # start = time.time()
+                    # new_move, evaluation_value, figure_to_kill, _ = mini_max(board, self.depth, True, float('-inf'),float('inf'),
+                    #                                                                        black_pieces, white_pieces, self.NUMBER_OF_PIECES, None)
+                    # end = time.time()
+                    # self.time_mini_WHITE.append(end-start)
+                    # self.B_prop_WHITE.append(abp.GLOBAL_node_min_cnt)
+                    # abp.GLOBAL_alfa_cnt, abp.GLOBAL_beta_cnt, abp.GLOBAL_node_max_cnt, abp.GLOBAL_node_min_cnt = 0,0,0,0
+                    # ####################################################################
+
+                    
+                    start = time.time()
                     new_move, evaluation_value, figure_to_kill, _ = alpha_beta(board, self.depth, True, float('-inf'),float('inf'),
                                                                                            black_pieces, white_pieces, self.NUMBER_OF_PIECES, None)
+                    end = time.time()
                     
+                    # ####################################################################
+                    # self.time_WHITE.append(end-start)
+                    # self.A_prop_WHITE.append(abp.GLOBAL_node_max_cnt)
+                    # abp.GLOBAL_alfa_cnt, abp.GLOBAL_beta_cnt, abp.GLOBAL_node_max_cnt, abp.GLOBAL_node_min_cnt = 0,0,0,0
+                    # ####################################################################
+
                     print('Move: {}\nFigure to kill: {}'.format(new_move, figure_to_kill))
 
                     self.trash = self.make_move(self.PLAYER_ON_MOVE, position_on_board[new_move], 3, None)
@@ -379,15 +414,38 @@ class Game_Board():
                     if self.WHITE_PIECES > 3: print('Second stage white.')
                     else: print('Third stage white')
                     self.global_move_counter += 1
+                    
+
+                    # ######################## MINIMAX - NEMA PODREZIVANJA #########################
+                    # start = time.time()
+                    # new_move, evaluation_value, figure_to_kill, _ = mini_max(board, self.depth, True, float('-inf'),float('inf'),
+                    #                                                                        black_pieces, white_pieces, self.NUMBER_OF_PIECES, None)
+                    # end = time.time()
+                    # self.time_mini_WHITE.append(end-start)
+                    # self.B_prop_WHITE.append(abp.GLOBAL_node_min_cnt)
+                    # abp.GLOBAL_alfa_cnt, abp.GLOBAL_beta_cnt, abp.GLOBAL_node_max_cnt, abp.GLOBAL_node_min_cnt = 0,0,0,0
+                    # ####################################################################
+
+
+                    start = time.time()
                     new_move, evaluation_value, figure_to_kill, new_place = alpha_beta(board, self.depth, True, float('-inf'),float('inf'),
                                                                                            black_pieces, white_pieces, self.NUMBER_OF_PIECES, None)
+                    end = time.time()
+                    
+                    # ####################################################################
+                    # self.time_WHITE.append(end-start)
+                    # self.A_prop_WHITE.append(abp.GLOBAL_node_max_cnt)
+                    # abp.GLOBAL_alfa_cnt, abp.GLOBAL_beta_cnt, abp.GLOBAL_node_max_cnt, abp.GLOBAL_node_min_cnt = 0,0,0,0
+                    # ####################################################################
                     
                     if not new_move:
                         all_pieces_list.update()
                         all_pieces_list.draw(self.screen)
                         pygame.display.flip()
                         print('Black wins. There are no legal moves for White player.')
-                        print('Moves counter: {}'.format(self.global_move_counter))
+                        print('Moves counter: {}'.format(self.global_move_counter))                        
+                        print('Depth: {}'.format(self.depth))
+                        #self.results(self.time_mini_WHITE, self.time_WHITE, self.B_prop_WHITE, self.A_prop_WHITE, self.time_mini_BLACK, self.time_BLACK, self.B_prop_BLACK, self.A_prop_BLACK)
                         time.sleep(20)
                         exit()
 
@@ -400,6 +458,7 @@ class Game_Board():
                     
                     print('Move: {}\nNew place: {}\nFigure to kill: {}'.format(new_move, new_place, figure_to_kill))
                     self.trash = self.make_move(self.PLAYER_ON_MOVE, position_on_board[new_move], 3, new_place)
+
 
                 if figure_to_kill:
                     self.kill_piece(WHITE, figure_to_kill)
@@ -427,21 +486,63 @@ class Game_Board():
                     self.global_move_counter += 1
                     # in first stage we only put pieces down, we are never moving them
                     print('First stage black.')
+                    
+                    # ######################## MINIMAX - NEMA PODREZIVANJA #########################
+                    # start = time.time()
+                    # new_move, evaluation_value, figure_to_kill, _ = mini_max(board, self.depth, True, float('-inf'),float('inf'),
+                    #                                                                        black_pieces, white_pieces, self.NUMBER_OF_PIECES, None)
+                    # end = time.time()                    
+                    # self.time_mini_BLACK.append(end-start)
+                    # self.B_prop_BLACK.append(abp.GLOBAL_node_min_cnt)
+                    # abp.GLOBAL_alfa_cnt, abp.GLOBAL_beta_cnt, abp.GLOBAL_node_max_cnt, abp.GLOBAL_node_min_cnt = 0,0,0,0
+                    # ####################################################################
+
+
+                    start = time.time()                    
                     new_move, evaluation_value, figure_to_kill, _ = alpha_beta(board, self.depth, True, float('-inf'),float('inf'),
                                                                                            white_pieces, black_pieces, self.NUMBER_OF_PIECES, None)
-                    
+                    end = time.time()
+                    # ####################################################################
+                    # self.time_BLACK.append(end-start)
+                    # self.A_prop_BLACK.append(abp.GLOBAL_node_max_cnt)
+                    # abp.GLOBAL_alfa_cnt, abp.GLOBAL_beta_cnt, abp.GLOBAL_node_max_cnt, abp.GLOBAL_node_min_cnt = 0,0,0,0
+                    # ####################################################################
+
+
                     print('Move: {}\nFigure to kill: {}'.format(new_move, figure_to_kill))
 
                     self.trash = self.make_move(self.PLAYER_ON_MOVE, position_on_board[new_move], 1, None)
 
+                    
                     time.sleep(1) # pauzira se program na sekundu da se bolje vidi stavljanje figure i ubijanje
 
                 else:
                     if self.BLACK_PIECES > 3: print('Second stage black.')
                     else: print('Third stage black.')
                     self.global_move_counter += 1
+                    
+                    # ######################## MINIMAX - NEMA PODREZIVANJA #########################
+                    # start = time.time()
+                    # new_move, evaluation_value, figure_to_kill, _ = mini_max(board, self.depth, True, float('-inf'),float('inf'),
+                    #                                                                        black_pieces, white_pieces, self.NUMBER_OF_PIECES, None)
+                    # end = time.time()
+                    # self.time_mini_BLACK.append(end-start)
+                    # self.B_prop_BLACK.append(abp.GLOBAL_node_min_cnt)
+                    # abp.GLOBAL_alfa_cnt, abp.GLOBAL_beta_cnt, abp.GLOBAL_node_max_cnt, abp.GLOBAL_node_min_cnt = 0,0,0,0
+                    # ####################################################################
+
+                    
+                    
+                    start = time.time()
                     new_move, evaluation_value, figure_to_kill, new_place = alpha_beta(board, self.depth, True, float('-inf'),float('inf'),
                                                                                            white_pieces, black_pieces, self.NUMBER_OF_PIECES, None)
+                    end = time.time()
+                    # ####################################################################
+                    # self.time_BLACK.append(end-start)
+                    # self.A_prop_BLACK.append(abp.GLOBAL_node_max_cnt)
+                    # abp.GLOBAL_alfa_cnt, abp.GLOBAL_beta_cnt, abp.GLOBAL_node_max_cnt, abp.GLOBAL_node_min_cnt = 0,0,0,0
+                    # ####################################################################
+
 
                     if not new_move:
                         all_pieces_list.update()
@@ -449,6 +550,8 @@ class Game_Board():
                         pygame.display.flip()
                         print('White wins. There are no legal moves for Black player.')
                         print('Moves counter: {}'.format(self.global_move_counter))
+                        print('Depth: {}'.format(self.depth))
+                        #self.results(self.time_mini_WHITE, self.time_WHITE, self.B_prop_WHITE, self.A_prop_WHITE, self.time_mini_BLACK, self.time_BLACK, self.B_prop_BLACK, self.A_prop_BLACK)
                         time.sleep(20)
                         exit()
 
@@ -462,7 +565,7 @@ class Game_Board():
                     print('Move: {}\nNew place: {}\nFigure to kill: {}'.format(new_move, new_place, figure_to_kill))
                     self.trash = self.make_move(self.PLAYER_ON_MOVE, position_on_board[new_move], 1, new_place)
 
-
+                    
                 if figure_to_kill:
                     self.kill_piece(BLACK, figure_to_kill)
                 
@@ -476,9 +579,11 @@ class Game_Board():
             pygame.display.flip()
             time.sleep(1)
 
-            if self.global_move_counter >= 100:
+            if self.global_move_counter >= 75:
                 print('Tie game.')
                 print('Moves counter: {}'.format(self.global_move_counter))
+                print('Depth: {}'.format(self.depth))
+                # self.results(self.time_mini_WHITE, self.time_WHITE, self.B_prop_WHITE, self.A_prop_WHITE, self.time_mini_BLACK, self.time_BLACK, self.B_prop_BLACK, self.A_prop_BLACK)         
                 time.sleep(5)
                 exit()
 
@@ -486,17 +591,34 @@ class Game_Board():
             if (self.white_positions_taken and not self.NUMBER_OF_PIECES and self.no_legal_moves_game_loss(WHITE)) or self.WHITE_PIECES < 3:
                 print('\nBlack wins.')
                 print('Moves counter: {}'.format(self.global_move_counter))
+                print('Depth: {}'.format(self.depth))
+                #self.results(self.time_mini_WHITE, self.time_WHITE, self.B_prop_WHITE, self.A_prop_WHITE, self.time_mini_BLACK, self.time_BLACK, self.B_prop_BLACK, self.A_prop_BLACK)         
                 time.sleep(5)
                 exit()
 
             if (self.black_positions_taken and not self.NUMBER_OF_PIECES and self.no_legal_moves_game_loss(BLACK)) or self.BLACK_PIECES < 3:
                 print('White wins.')
                 print('Moves counter: {}'.format(self.global_move_counter))
+                print('Depth: {}'.format(self.depth))
+                #self.results(self.time_mini_WHITE, self.time_WHITE, self.B_prop_WHITE, self.A_prop_WHITE, self.time_mini_BLACK, self.time_BLACK, self.B_prop_BLACK, self.A_prop_BLACK) 
                 time.sleep(5)
                 exit()
         
         time.sleep(5)
         pygame.quit()
+
+
+    def results(self, time_mini_white, time_white, nodes_white, cut_white, time_mini_black, time_black, nodes_black, cut_black):
+        time_mini_white = np.mean(time_mini_white)
+        time_white = np.mean(time_white)
+        ab_white = np.mean([(1-float(i)/j) for i,j in zip(cut_white, nodes_white)])
+
+        time_mini_black = np.mean(time_mini_black)
+        time_black = np.mean(time_black)
+        ab_black = np.mean([(1-float(i)/j) for i,j in zip(cut_black, nodes_black)])
+        
+        print('WHITE: {}, {}, {}'.format(time_mini_white, time_white, ab_white))
+        print('BLACK: {}, {}, {}'.format(time_mini_black, time_black, ab_black))
 
 
     def gui_settings(self):
