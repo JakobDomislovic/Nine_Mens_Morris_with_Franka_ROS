@@ -11,23 +11,23 @@ def number_of_pieces_heuristic(black, white, number_of_pieces, mill_move_flag, p
 
     if number_of_pieces:
         # stage 1
-        evaluation += (len(black) - len(white)) * 100
+        evaluation += (len(black) - len(white)) * 10
     
     else:
         # if stage 2 or 3 value mill more
 
-        evaluation += (len(black) - len(white)) * 300
+        evaluation += (len(black) - len(white)) * 30
         
         if mill_move_flag:
                 #print('Mill move flag TRUE')
             if player: 
-                evaluation += -10000
+                evaluation += -100
                 if depth == board_with_ai.GLOBAL_search_depth - 1: 
-                    evaluation += -10000
+                    evaluation += -100
             else: 
-                evaluation += 10000
+                evaluation += 100
                 if depth == board_with_ai.GLOBAL_search_depth - 1: 
-                    evaluation += 10000
+                    evaluation += 100
         
     return evaluation
 
@@ -88,7 +88,7 @@ def try_2_block_pieces(black, white, number_of_pieces, mill_move_flag, player, d
         evaluation += (length_black - length_white) * 50
     
     else:
-        evaluation += (length_black - length_white) * 1000
+        evaluation += (length_black - length_white) * 100
         if depth == board_with_ai.GLOBAL_search_depth - 1: 
             if player: evaluation += -1000
             else: evaluation += 1000 
@@ -164,14 +164,14 @@ def try_different_mills(black, white, number_of_pieces, mill_move_flag, player, 
 
     elif not player and length_black > 3:
         # u drugoj i trecoj fazi vise cijeni mlinove nego u prvoj
-        if mill_move_flag: evaluation += 100
+        if mill_move_flag: evaluation += 90
         evaluation += (length_black - length_white) * 15
         evaluation += (black_three_piece - white_three_piece) * 5
         evaluation += (black_super_mill - white_super_mill) * 10
     
     elif player and length_white > 3:
         # u drugoj i trecoj fazi vise cijeni mlinove nego u prvoj
-        if mill_move_flag: evaluation += -100
+        if mill_move_flag: evaluation += -90
         evaluation += (length_black - length_white) * 15
         evaluation += (black_two_piece - white_two_piece) * 5
         evaluation += (black_three_piece - white_three_piece) * 5

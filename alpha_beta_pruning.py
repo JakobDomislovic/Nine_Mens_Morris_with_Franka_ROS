@@ -702,7 +702,7 @@ def possible_moves_list(board_x, black_x, white_x, max_player, stage, depth):
                     #print(adjacent, compare1)
                     if figure == compare0 and adjacent == compare1:
                         #print('Brisanje stage 2')
-                        board_with_ai.GLOBAL_last_move = []
+                        #board_with_ai.GLOBAL_last_move = []
                         continue
 
                 if adjacent in board: continue
@@ -757,13 +757,13 @@ def possible_moves_list(board_x, black_x, white_x, max_player, stage, depth):
             
             for move in state_space.keys(): # only difference between stage 2 and 3 is that in stage 3 we can move on any free field
                 
-                if depth == board_with_ai.GLOBAL_search_depth and board_with_ai.GLOBAL_last_move:
-                    compare0 = board_with_ai.GLOBAL_last_move[0][0]
-                    compare1 = board_with_ai.GLOBAL_last_move[0][1]
-                    if move == compare0 and compare1 == figure:
-                        #print('Brisanje stage 3')
-                        board_with_ai.GLOBAL_last_move = []
-                        continue
+                #if depth == board_with_ai.GLOBAL_search_depth and board_with_ai.GLOBAL_last_move:
+                #    compare0 = board_with_ai.GLOBAL_last_move[0][0]
+                #    compare1 = board_with_ai.GLOBAL_last_move[0][1]
+                #    if move == compare0 and compare1 == figure:
+                #        #print('Brisanje stage 3')
+                #        board_with_ai.GLOBAL_last_move = []
+                #        continue
 
                 if move in board: continue
 
