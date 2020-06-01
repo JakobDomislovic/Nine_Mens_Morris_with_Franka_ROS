@@ -89,9 +89,9 @@ def try_2_block_pieces(black, white, number_of_pieces, mill_move_flag, player, d
     
     else:
         evaluation += (length_black - length_white) * 100
-        # if depth == board_with_ai.GLOBAL_search_depth - 1: 
-        #     if player: evaluation += -1000
-        #     else: evaluation += 1000 
+        #if depth == board_with_ai.GLOBAL_search_depth - 1: 
+        #    if player: evaluation += -1000
+        #    else: evaluation += 1000 
 
     if mill_move_flag:
         if player: evaluation += -10000
@@ -158,14 +158,14 @@ def try_different_mills(black, white, number_of_pieces, mill_move_flag, player, 
     if number_of_pieces:
         # first stage
         if mill_move_flag: evaluation += 20
-        evaluation += (length_black - length_white) * 50
+        evaluation += (length_black - length_white) * 10
         evaluation += (black_two_piece - white_two_piece) * 10
         evaluation += (black_three_piece - white_three_piece) * 7
 
     elif not player and length_black > 3:
         # u drugoj i trecoj fazi vise cijeni mlinove nego u prvoj
         if mill_move_flag: evaluation += 90
-        evaluation += (length_black - length_white) * 50
+        evaluation += (length_black - length_white) * 15
         evaluation += (black_three_piece - white_three_piece) * 5
         evaluation += (black_super_mill - white_super_mill) * 10
     
@@ -185,7 +185,7 @@ def try_different_mills(black, white, number_of_pieces, mill_move_flag, player, 
         evaluation += (length_black - length_white) * 100
         evaluation += (black_two_piece - white_two_piece) * 50
         evaluation += (black_three_piece - white_three_piece) * 0
-
+    
     if depth == board_with_ai.GLOBAL_search_depth - 1:
         if mill_move_flag:
             if player:
@@ -278,15 +278,14 @@ def advanced_heuristic(black, white, number_of_pieces, mill_move_flag, player, d
         #evaluation += branch_factor_diff * 1
         
         
-    # if depth == board_with_ai.GLOBAL_search_depth - 1:
-    #     if mill_move_flag:
-    #         if player:
-    #             evaluation += -1000
-    #         else:
-    #             evaluation += 1000
+    #if depth == board_with_ai.GLOBAL_search_depth - 1:
+    #    if mill_move_flag:
+    #        if player:
+    #            evaluation += -1000
+    #        else:
+    #            evaluation += 1000
 
     return evaluation
-
 
 def branch_factor_heuristic(black, white, number_of_pieces, mill_move_flag, player, depth):
     
