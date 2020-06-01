@@ -1,10 +1,10 @@
 # Nine Men's Morris AI 
 Potrebno je instalirati [pygame](https://pypi.org/project/pygame/) biblioteku. 
-
+#### Instalacija pygame biblioteke ####
 ```bash 
 pip install pygame 
 ``` 
-
+#### Pokretanje samo minimax algoritma s alfa-beta podrezivanjem ####
 GUI se pokreće automatski pokretanjem skripte: 
 
 ```bash 
@@ -12,7 +12,7 @@ python main.py
 ```
 
 #### Franka ROS/Gazebo ####
-Koraci za pokretanje Gazebo svijeta s Frankom i minimax algoritmom
+Koraci za pokretanje Gazebo svijeta s Frankom i minimax algoritmom:
 1. ```bash
 	roscore
    ```
