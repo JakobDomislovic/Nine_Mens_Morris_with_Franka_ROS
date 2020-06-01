@@ -10,3 +10,20 @@ GUI se pokreće automatski pokretanjem skripte:
 ```bash 
 python main.py
 ```
+
+#### Franka ROS/Gazebo ####
+Koraci za pokretanje Gazebo svijeta s Frankom i minimax algoritmom
+1. ```bash
+	roscore
+   ```
+2. ```bash
+   roslaunch panda_sim game_world.launch
+   ```
+3. ```bash
+   rosrun panda_sim panda_interface.py
+   ```
+4. ```bash
+   rosrun panda_sim main.py
+   ```
+
+
