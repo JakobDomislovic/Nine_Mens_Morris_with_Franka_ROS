@@ -1,4 +1,0 @@
-float32[] joint_positions
----
-bool success
-string error_msg
