@@ -20,7 +20,7 @@ Every map above is ROS package. First you need to make your own workspace. Tutor
 ### Only game ###
 If you wish to play game without Franka following commands are needed:
 ```bash 
-rosrun artificial\_intelligence main\_no\_franka.py 
+rosrun artificial_intelligence main_no_franka.py 
 ``` 
 You can choose: game depth, mode(Human vs. Human, Human vs. AI, AI vs. AI), heuristic function
 
@@ -30,7 +30,7 @@ You can choose: game depth, mode(Human vs. Human, Human vs. AI, AI vs. AI), heur
 	roscore
    ```
 2. ```bash
-   roslaunch panda\_sim game\_world.launch
+   roslaunch panda_sim game_world.launch
    ```
 3. ```bash
    rosrun artificial_intelligence main.py
