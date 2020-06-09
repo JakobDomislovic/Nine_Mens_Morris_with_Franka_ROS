@@ -12,7 +12,7 @@
 
     <!--launch GAZEBO with own world configuration -->
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
-        <arg name="world_name" default="$(find panda_sim)/worlds/game_world_final.world" />
+        <arg name="world_name" default="$(find panda_sim)/worlds/game_world_final_m.world" />
         <arg name="verbose" value="$(arg verbose)"/>
         <arg name="debug" value="$(arg debug)" />
         <arg name="gui" value="$(arg gui)" />

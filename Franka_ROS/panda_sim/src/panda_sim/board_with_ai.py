@@ -74,11 +74,11 @@ class Game_Board():
         
         self.A_prop_WHITE = []
         self.B_prop_WHITE = []
-        self.time_WHITE = []
+        self.time_WHITE =   []
         self.time_mini_WHITE = []
         self.A_prop_BLACK = []
         self.B_prop_BLACK = []
-        self.time_BLACK = []
+        self.time_BLACK =   []
         self.time_mini_BLACK = []
 
         self.mouse_click = False
@@ -113,10 +113,10 @@ class Game_Board():
         
         # odma ga postavi u stow poziciju i iskljuci gripper
         #ret = self.named_positions('stow')
-        ret = self.named_positions('home')
+        #ret = self.named_positions('home')
         ret = self.vac_gripper(False)
 
-        self.gripper_safety_height = 0.08
+        self.gripper_safety_height = 0.055
         self.gripper_piece_height = 0.024
 
         self.first_stage_white_move_F = 0
@@ -217,7 +217,8 @@ class Game_Board():
                     self.PLAYER_ON_MOVE = BLACK
                     self.make_mill_move_white = False
                     self.trash = self.is_mill(BLACK)
-                    self.kill_with_franka(self.black_franka_mill_move)
+                    white_franka_mill_move = True
+                    #self.kill_with_franka(self.black_franka_mill_move)
                     # ovdje je dobro mjesto da stavis da bijeli ubija
                     
 
@@ -323,7 +324,7 @@ class Game_Board():
 
             if white_franka_mill_move:
                 white_franka_mill_move = False
-                self.kill_with_franka(self.white_franka_mill_move)
+                self.kill_with_franka(self.white_franka_kill_move)
             
             if black_franka_mill_move:
                 black_franka_mill_move = False
@@ -386,19 +387,21 @@ class Game_Board():
         d = franka_white_pieces[self.first_stage_white_frk]
         p.position.x = d[0]
         p.position.y = d[1]
-        #p.position.z = self.gripper_safety_height
+        p.position.z = self.gripper_safety_height
         ## gripper dolazi malo iznad figura
-        #ret = self.move_gripper(p)
+        ret = self.move_gripper(p)
         # gripper se spusta do figura
         p.position.z = d[2]
         ret = self.move_gripper(p)
         # pali se gripper
         ret = self.vac_gripper(True)
         # gipper se postavlja ponovo na visinu z=0.5 da se izbjegnu kolizije
-        time.sleep(0.5)
-        ret = self.named_positions('home')
-        #p.position.z = self.gripper_safety_height
-        #ret = self.move_gripper(p)
+        #time.sleep(0.5)
+        p.position.z = self.gripper_safety_height 
+        ret = self.move_gripper(p)
+        
+        ret = self.named_positions('stow')
+        #self.franka_2_center()
 
         # 2.) gripper se salje na poziciju na ploci, ali ponovo malo iznad --> z=0.4
         d = franka_board_postions[place]
@@ -407,14 +410,14 @@ class Game_Board():
         p.position.z = self.gripper_safety_height
         ret = self.move_gripper(p)
         # gripper se stavlja na visinu z=0.024 na kojoj i ispusta figure
-        p.position.z = self.gripper_piece_height
-        ret = self.move_gripper(p)
+        #p.position.z = self.gripper_piece_height
+        #ret = self.move_gripper(p)
         # gasi se gripper da se ispusti figura
         ret = self.vac_gripper(False)
         # ponovo postavi griper na sigurnosnu visinu
-        p.position.z = self.gripper_safety_height
-        ret = self.move_gripper(p)
-        ret = self.named_positions('home')
+        #p.position.z = self.gripper_safety_height #+ 0.01
+        #ret = self.move_gripper(p)
+        ret = self.named_positions('stow')
 
 
     def first_stage_franka_BLACK(self, place):
@@ -433,19 +436,20 @@ class Game_Board():
         d = franka_black_pieces[self.first_stage_black_frk]
         p.position.x = d[0]
         p.position.y = d[1]
-        #p.position.z = self.gripper_safety_height
+        p.position.z = self.gripper_safety_height
         ## gripper dolazi malo iznad figura
-        #ret = self.move_gripper(p)
+        ret = self.move_gripper(p)
         # gripper se spusta do figura
         p.position.z = d[2]
         ret = self.move_gripper(p)
         # pali se gripper
         ret = self.vac_gripper(True)
         # gipper se postavlja ponovo na visinu z=0.5 da se izbjegnu kolizije
-        time.sleep(0.5)
-        ret = self.named_positions('home')
-        #p.position.z = self.gripper_safety_height
-        #ret = self.move_gripper(p)
+        p.position.z = 0.05 #self.gripper_safety_height
+        ret = self.move_gripper(p)
+       
+        ret = self.named_positions('stow')
+        #self.franka_2_center()
 
         # 2.) gripper se salje na poziciju na ploci, ali ponovo malo iznad --> z=0.4
         d = franka_board_postions[place]
@@ -454,14 +458,14 @@ class Game_Board():
         p.position.z = self.gripper_safety_height
         ret = self.move_gripper(p)
         # gripper se stavlja na visinu z=0.024 na kojoj i ispusta figure
-        p.position.z = self.gripper_piece_height
-        ret = self.move_gripper(p)
+        #p.position.z = self.gripper_piece_height
+        #ret = self.move_gripper(p)
         # gasi se gripper da se ispusti figura
         ret = self.vac_gripper(False)
         # ponovo postavi griper na sigurnosnu visinu
-        p.position.z = self.gripper_safety_height
-        ret = self.move_gripper(p)
-        ret = self.named_positions('home')
+        #p.position.z = self.gripper_safety_height #+ 0.01
+        #ret = self.move_gripper(p)
+        ret = self.named_positions('stow')
 
     def second_and_third_stage_franka(self, pick, place):
         
@@ -485,10 +489,9 @@ class Game_Board():
         p.position.z = d[2]
         ret = self.move_gripper(p)
         # pali se gripper
-        time.sleep(0.5)
         ret = self.vac_gripper(True)
+        
         # pomicemo gripper opet malo iznad te pozicije
-        #ret = self.named_positions('ready')
         p.position.z = self.gripper_safety_height
         ret = self.move_gripper(p)
 
@@ -507,7 +510,8 @@ class Game_Board():
         # pomicemo gripper opet malo iznad te pozicije --> sigurnosna visina
         p.position.z = self.gripper_safety_height
         ret = self.move_gripper(p)
-        ret = self.named_positions('home')
+        self.named_positions('stow')
+        #self.franka_2_center()
 
     def kill_with_franka(self, kill):
         
@@ -533,9 +537,7 @@ class Game_Board():
         # pali se gripper
         ret = self.vac_gripper(True)
         # pomicemo gripper opet malo iznad te pozicije
-        time.sleep(0.5)
-        self.named_positions('home')
-        p.position.z = self.gripper_safety_height+0.2   # ovdje ides na malo vise da ne lupis u kutiju za smece
+        p.position.z = self.gripper_safety_height   # ovdje ides na malo vise da ne lupis u kutiju za smece
         ret = self.move_gripper(p)
 
         # 2.) postavljanje uzete figure u smece/groblje
@@ -548,8 +550,10 @@ class Game_Board():
         # gasi se gripper
         ret = self.vac_gripper(False)
         # vracanje grippera na sredinu ploce
-        self.named_positions('home')
         
+        self.named_positions('home')
+        #self.named_positions('stow')
+        self.named_positions('stow')
 
     def franka_2_center(self):
         
@@ -865,7 +869,6 @@ class Game_Board():
                     return True
 
             else:
-                key, flag = self.check_position(position_on_board[new_location][0], position_on_board[new_location][1])
                 # ovdje bi mogao napraviti check position da dobijes pozu bijele koju trebas pomaknuti
                 while True:
                     for event in pygame.event.get():
@@ -1165,3 +1168,5 @@ class Black_Piece(pygame.sprite.Sprite):
 
     def tag(self):
         pygame.draw.circle(self.image, (170,0,170), (PIECE_SIZE,PIECE_SIZE), PIECE_SIZE, 5)
+#!/usr/bin/env python
+

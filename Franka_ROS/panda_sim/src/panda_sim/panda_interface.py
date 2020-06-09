@@ -7,6 +7,7 @@ import tf2_ros
 import tf2_geometry_msgs
 import moveit_commander
 from geometry_msgs.msg import PoseStamped, Quaternion, Point
+from moveit_msgs.msg import DisplayTrajectory, Constraints, OrientationConstraint
 
 from panda_sim.srv import CartesianGoal, CartesianGoalResponse, JointsGoal, JointsGoalResponse, NamedGoal, \
     NamedGoalResponse, VacuumGripperControl, VacuumGripperControlRequest
@@ -32,6 +33,8 @@ class ArmInterface(object):
         rospy.Service('move_arm_joints_pose', JointsGoal, self.move_arm_joints_pose_srv)
         rospy.Service('move_arm_cartesian_pose', CartesianGoal, self.move_arm_cartesian_pose_srv)
         rospy.Service('move_arm_named_pose', NamedGoal, self.move_arm_named_pose_srv)
+        #rospy.Service('move_arm_cartesian_path', CartesianPath, self.move_arm_cartesian_path_srv)
+
 
         # Make a simple planning scene to avoid collision with the ground.
         rospy.sleep(5)
@@ -44,6 +47,8 @@ class ArmInterface(object):
         pose.pose.orientation = Quaternion(0, 0, 0, 1)
         self.planning_scene.add_cylinder('ground_plane', pose, radius=1, height=1)
 
+        self.dummy = True
+        self.last_move = 0
         # Everything is ready. Just keep the node from exiting.
         rospy.spin()
 
@@ -51,6 +56,21 @@ class ArmInterface(object):
 
         rospy.loginfo('Got new goal:\n%s', goal_pose)
 
+        # Set the orientations constraint for end effector link. We don't care about the yaw of the final link so it is
+        # an unnecessary constraint on the path planning. Here we allow for any yaw value by specifying a large goal 
+        # tolerance for that axis. This also helps to avoid unnatural movement.
+        
+        print(goal_pose.position.z)
+        
+        if goal_pose.position.z == 0.024 or self.last_move == 0.024:
+            print('Turning constrants: TRUE')
+            self.yaw_on_off(True, goal_pose)
+        else:
+            print('Turning constrants: FALSE')
+            self.yaw_on_off(False, goal_pose)
+
+        self.last_move = goal_pose.position.z
+        
         self.arm_move_group.set_pose_target(goal_pose)
         success = self.arm_move_group.go(wait=True)
         self.arm_move_group.stop()  # Ensure there is no residual movement.
@@ -103,10 +123,54 @@ class ArmInterface(object):
             resp.error_msg = "Couldn't find transformation from '{}' to '{}'.".format(frame, self.base_frame)
             return resp
 
+        print('Trenutna pozicija z: {}'.format(local_pose.position.z))
+        print('Stara pozicija z: {}'.format(self.last_move))
+
         success = self.move_arm_cartesian_pose(local_pose)
         resp.success = success
         resp.error_msg = "" if success else "Moving to specified position failed."
 
+        return resp
+
+    def yaw_on_off(self, flag, goal_pose):
+
+        if flag: print('CONSTRAINTS ON')
+        if goal_pose != 'jump':
+            arm_constraints = Constraints()
+            arm_constraints.name = 'default'
+            yaw_constraint = OrientationConstraint()
+            yaw_constraint.header.frame_id = 'world'
+            yaw_constraint.link_name = 'panda_link7'
+            yaw_constraint.orientation = goal_pose.orientation
+            yaw_constraint.absolute_x_axis_tolerance = 0.35
+            yaw_constraint.absolute_y_axis_tolerance = 0.35
+            yaw_constraint.absolute_z_axis_tolerance = 0.05
+            yaw_constraint.weight = 1
+            arm_constraints.orientation_constraints.append(yaw_constraint)
+            self.arm_move_group.set_path_constraints(arm_constraints)
+
+        if not flag:
+            print('CONSTRAINTS OFF')
+            self.arm_move_group.clear_path_constraints()
+
+
+    def move_arm_cartesian_path_srv(self, req):
+        resp = CartesianGoalResponse()
+        local_pose_list = []
+
+        for req_i in req: # buduci da je sad req lista Pose poruka idem provjeravat jednu po jednu je li ok
+            tf_success, frame, local_pose = self.transform_pose(req_i.frame, req_i.pose)
+            if not tf_success:
+                resp.success = False
+                resp.error_msg = "Couldn't find transformation from '{}' to '{}'.".format(frame, self.base_frame)
+                return resp
+            
+            local_pose_list.append(local_pose)
+
+        success = self.move_arm_cartesian_path(local_pose_list)
+        resp.success = success
+        resp.error_msg = "" if success else "Moving to specified position failed."
+        
         return resp
 
     def move_arm_joints_pose_srv(self, req):
@@ -128,6 +192,9 @@ class ArmInterface(object):
         return resp
 
     def move_arm_named_pose_srv(self, req):
+        # gasimo ogranicenja kad radimo named_positions
+        self.yaw_on_off(False, 'jump')
+
         resp = NamedGoalResponse()
 
         if req.pose_name in self.arm_move_group.get_named_targets():
@@ -142,6 +209,7 @@ class ArmInterface(object):
             resp.error_msg = "Unknown pose named '{}'".format(req.pose_name)
 
         return resp
+
 
     def gripper_control(self, enable):
         try:
