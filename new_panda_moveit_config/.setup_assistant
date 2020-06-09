@@ -1,0 +1,11 @@
+moveit_setup_assistant_config:
+  URDF:
+    package: franka_description
+    relative_path: robots/panda_arm_vacuum.urdf.xacro
+    xacro_args: ""
+  SRDF:
+    relative_path: config/panda.srdf
+  CONFIG:
+    author_name: Marko
+    author_email: marko.krizmancic@fer.hr
+    generated_timestamp: 1589570625
