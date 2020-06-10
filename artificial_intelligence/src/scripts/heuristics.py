@@ -19,7 +19,6 @@ def number_of_pieces_heuristic(black, white, number_of_pieces, mill_move_flag, p
         evaluation += (len(black) - len(white)) * 30
         
         if mill_move_flag:
-                #print('Mill move flag TRUE')
             if player: 
                 evaluation += -100
                 if depth == board_with_ai.GLOBAL_search_depth - 1: 
@@ -89,10 +88,7 @@ def try_2_block_pieces(black, white, number_of_pieces, mill_move_flag, player, d
     
     else:
         evaluation += (length_black - length_white) * 100
-        # if depth == board_with_ai.GLOBAL_search_depth - 1: 
-        #     if player: evaluation += -1000
-        #     else: evaluation += 1000 
-
+        
     if mill_move_flag:
         if player: evaluation += -10000
         else: evaluation += 10000
@@ -485,8 +481,6 @@ def is_Terminal(board, player, white, black):
 
 def branch_factor(board_x, black_x, white_x, max_player, stage, depth):
     
-    # razmisli treba li ti uopce 'deepcopy', to je O(n)
-
     not_in_mill = set()
     board = copy.deepcopy(board_x)
     
@@ -573,12 +567,8 @@ def branch_factor(board_x, black_x, white_x, max_player, stage, depth):
                 if depth == board_with_ai.GLOBAL_search_depth and board_with_ai.GLOBAL_last_move:
                     compare0 = board_with_ai.GLOBAL_last_move[0][1] # figura koju trenutno promatras ista kao novi potez u proslom koraku
                     compare1 = board_with_ai.GLOBAL_last_move[0][0] # ako je susjedni (novo moguce polje) isti kao proslo mjesto s kojeg smo krenuli
-                    #print(figure, compare0)
-                    #print(adjacent, compare1)
-                    if figure == compare0 and adjacent == compare1:
-                        #print('Brisanje stage 2')
-                        #board_with_ai.GLOBAL_last_move = []
-                        continue
+                    
+                    if figure == compare0 and adjacent == compare1: continue
 
                 if adjacent in board: continue
 
@@ -614,8 +604,6 @@ def branch_factor(board_x, black_x, white_x, max_player, stage, depth):
                     compare0 = board_with_ai.GLOBAL_last_move[0][0]
                     compare1 = board_with_ai.GLOBAL_last_move[0][1]
                     if move == compare0 and compare1 == figure:
-                        #print('Brisanje stage 3')
-                        #board_with_ai.GLOBAL_last_move = []
                         continue
 
                 if move in board: continue

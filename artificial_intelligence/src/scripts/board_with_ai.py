@@ -105,18 +105,14 @@ class Game_Board():
         pygame.display.set_caption("Nine Men's Morris")
         pygame.display.flip()
 
-        # kasnije dodaj jos da mozes birati ko je prvi na potezu 
         self.PLAYER_ON_MOVE = WHITE
 
         self.clock = pygame.time.Clock()
         self.make_mill_move = False
         
-        # odma ga postavi u stow poziciju i iskljuci gripper
-        #ret = self.named_positions('stow')
-        #ret = self.named_positions('home')
         ret = self.vac_gripper(False)
 
-        self.gripper_safety_height = 0.055
+        self.gripper_safety_height = 0.05
         self.gripper_piece_height = 0.024
 
         self.first_stage_white_move_F = 0
@@ -186,7 +182,7 @@ class Game_Board():
                     self.running = False
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     self.mx, self.my = pygame.mouse.get_pos()
-                    self.mouse_click = True   # mozes ju napraviti lokalnom varijablom
+                    self.mouse_click = True
 
 
             if self.PLAYER_ON_MOVE == WHITE and self.mouse_click:
@@ -200,10 +196,7 @@ class Game_Board():
                         self.make_mill_move_white = True
                         self.PLAYER_ON_MOVE = 0
                     else:
-                        # ako nema mlina posalji ruku u centar
-                        #self.franka_2_center()
                         self.PLAYER_ON_MOVE = BLACK
-                    # ako je bio legalni potez pokreni franku
                     if self.NUMBER_OF_PIECES: 
                         white_first_stage_franka_flag = True
                     else:
@@ -218,9 +211,7 @@ class Game_Board():
                     self.make_mill_move_white = False
                     self.trash = self.is_mill(BLACK)
                     white_franka_mill_move = True
-                    #self.kill_with_franka(self.black_franka_mill_move)
-                    # ovdje je dobro mjesto da stavis da bijeli ubija
-                    
+
 
             elif self.PLAYER_ON_MOVE == BLACK:
                 print('\nAI on turn.')
@@ -242,14 +233,11 @@ class Game_Board():
 
                     self.trash = self.make_move(self.PLAYER_ON_MOVE, position_on_board[new_move], 1, None)
 
-                    # posalji ruku da postavi figuru, a ako nema nikog za ubiti stavi ju na centar
                     black_first_stage_franka_flag = True
                     
-                    time.sleep(1) # pauzira se program na sekundu da se bolje vidi stavljanje figure i ubijanje
-
                 else:
-                    if self.BLACK_PIECES > 3: print('Druga faza crni')
-                    else: print('Treca faza crni')
+                    if self.BLACK_PIECES > 3: print('Second stage black.')
+                    else: print('Third stage black.')
                     self.global_move_counter += 1
                     new_move, evaluation_value, figure_to_kill, new_place = alpha_beta(board, self.depth, True, float('-inf'),float('inf'),
                                                                                            white_pieces, black_pieces, self.NUMBER_OF_PIECES, None)
@@ -292,7 +280,6 @@ class Game_Board():
                     self.PLAYER_ON_MOVE = WHITE
                     self.trash = self.is_mill(WHITE)
                     self.trash = self.is_mill(BLACK)
-                # na kraju postavljas da igra bijeli igrac
                 
                 print('\nWhite player on turn.')
                 
@@ -363,9 +350,7 @@ class Game_Board():
                 self.named_positions('stow')
                 time.sleep(5)
                 pygame.quit()
-            # nerijeseno ispitaj jesi li u fazi dva  ili tri i sve figure koje postoje su u mlinu
-            # TODO: check_draw
-        
+
         # ako je igra gotova posalji servis da ide u HOME
         time.sleep(5)
         pygame.quit()
@@ -396,12 +381,10 @@ class Game_Board():
         # pali se gripper
         ret = self.vac_gripper(True)
         # gipper se postavlja ponovo na visinu z=0.5 da se izbjegnu kolizije
-        #time.sleep(0.5)
         p.position.z = self.gripper_safety_height 
         ret = self.move_gripper(p)
         
         ret = self.named_positions('stow')
-        #self.franka_2_center()
 
         # 2.) gripper se salje na poziciju na ploci, ali ponovo malo iznad --> z=0.4
         d = franka_board_postions[place]
@@ -445,12 +428,11 @@ class Game_Board():
         # pali se gripper
         ret = self.vac_gripper(True)
         # gipper se postavlja ponovo na visinu z=0.5 da se izbjegnu kolizije
-        p.position.z = 0.05 #self.gripper_safety_height
+        p.position.z = self.gripper_safety_height
         ret = self.move_gripper(p)
        
         ret = self.named_positions('stow')
-        #self.franka_2_center()
-
+       
         # 2.) gripper se salje na poziciju na ploci, ali ponovo malo iznad --> z=0.4
         d = franka_board_postions[place]
         p.position.x = d[0]
@@ -511,7 +493,7 @@ class Game_Board():
         p.position.z = self.gripper_safety_height
         ret = self.move_gripper(p)
         self.named_positions('stow')
-        #self.franka_2_center()
+       
 
     def kill_with_franka(self, kill):
         
@@ -659,7 +641,6 @@ class Game_Board():
             if player_color == WHITE:
                 self.key, self.empty_spot = self.check_position(position[0], position[1])
                 if self.empty_spot:
-                    # OVDJE SELF.KEY TI JE POTEZ U PRVOJ FAZI --- ZA BIJELOG
                     self.first_stage_white_move_F = self.key
                     self.closed_positions[self.k] = position_on_board[self.k]
                     white = White_Piece(self.key)
@@ -674,7 +655,6 @@ class Game_Board():
             else:
                 self.key, self.empty_spot = self.check_position(position[0], position[1])
                 if self.empty_spot:
-                    # OVDJE SELF.KEY TI JE POTEZ U PRVOJ FAZI --- ZA BIJELOG
                     self.closed_positions[self.k] = position_on_board[self.k]
                     black = Black_Piece(self.key)
                     self.black_positions_taken[self.key] = position_on_board[self.key]
@@ -697,7 +677,6 @@ class Game_Board():
                     # dakle pogledaj je li BAREM JEDAN SUSJED SLOBODAN
                     for i in state_space[white_piece.key]:
                         if i not in self.closed_positions:
-                            # OVAJ 'i' BI TI MOGAO BITI ZA DRUGU FAZU PRVA FIGURA
                             there_are_legal_moves = True
                             break
                 if there_are_legal_moves: break
@@ -711,8 +690,6 @@ class Game_Board():
             all_pieces_list.draw(self.screen)
             pygame.display.flip()
             
-            # ako je odabir figure dobar, odabrati mjesto za figuru
-            #print('Odaberi novu lokaciju... mora biti susjedna')
             if mode == 3:
                 new_location = new_loc
                 time.sleep(1)
@@ -722,7 +699,6 @@ class Game_Board():
                 if flag:
                     for i in state_space[white_piece.key]:
                         if i == key:
-                            #print('Nova odabrana pozicija je: {}'.format(key))
                             # dodavanje novog spritea
                             white_piece.kill_it()
                             new_white = White_Piece(key)
@@ -738,7 +714,6 @@ class Game_Board():
                             del self.white_positions_taken[white_piece.key]
                             self.closed_positions[key] = position_on_board[key]
                             self.white_positions_taken[key] = position_on_board[key]
-                            #print('Bijele zauzete pozicije: {}'.format(self.white_positions_taken.keys()))
                             return True
 
             else:
@@ -750,7 +725,6 @@ class Game_Board():
                             if flag:
                                 for i in state_space[white_piece.key]:
                                     if i == key:
-                                        # OVAJ 'i' BI TI MOGAO BITI ZA DRUGU FAZU PRVA FIGURA
                                         # dodavanje novog spritea
                                         self.white_PLACE_Franka = key
                                         white_piece.kill_it()
@@ -767,7 +741,6 @@ class Game_Board():
                                         del self.white_positions_taken[white_piece.key]
                                         self.closed_positions[key] = position_on_board[key]
                                         self.white_positions_taken[key] = position_on_board[key]
-                                        #print('Bijele zauzete pozicije: {}'.format(self.white_positions_taken.keys()))
                                         return True
 
             return False
@@ -794,7 +767,6 @@ class Game_Board():
             all_pieces_list.draw(self.screen)
             pygame.display.flip()
             
-            #print('Odaberi lokaciju kamo ces premjestiti figuru.')
             while True:
                 if mode == 2: new_location = input('New location: ')
                 else: 
@@ -806,7 +778,6 @@ class Game_Board():
                 if flag:
                     for i in state_space[black_piece.key]:
                         if i == key:
-                            #print('Nova odabrana pozicija je: {}'.format(key))
                             black_piece.kill_it()
                             new_black = Black_Piece(key)
                             black_pieces_list.add(new_black)
@@ -821,7 +792,6 @@ class Game_Board():
                             del self.black_positions_taken[black_piece.key]
                             self.closed_positions[key] = position_on_board[key]
                             self.black_positions_taken[key] = position_on_board[key]
-                            #print('Crne zauzete pozicije: {}'.format(self.black_positions_taken.keys()))
                             return True
             
             return False
@@ -850,7 +820,6 @@ class Game_Board():
                 key, flag = self.check_position(position_on_board[new_location][0], position_on_board[new_location][1])
                 
                 if flag and key not in self.closed_positions:
-                    #print('Nova odabrana pozicija je: {}'.format(key))
                     # dodavanje novog spritea
                     self.white_PLACE_Franka = key
                     white_piece.kill_it()
@@ -865,18 +834,15 @@ class Game_Board():
                     del self.white_positions_taken[white_piece.key]
                     self.closed_positions[key] = position_on_board[key]
                     self.white_positions_taken[key] = position_on_board[key]
-                    #print('Bijele zauzete pozicije: {}'.format(self.white_positions_taken.keys()))
                     return True
 
             else:
-                # ovdje bi mogao napraviti check position da dobijes pozu bijele koju trebas pomaknuti
                 while True:
                     for event in pygame.event.get():
                         if event.type == pygame.MOUSEBUTTONDOWN:
                             new_x, new_y = pygame.mouse.get_pos()
                             key, flag = self.check_position(new_x, new_y)
                             if flag and key not in self.closed_positions:
-                                #print('Nova odabrana pozicija je: {}'.format(key))
                                 # dodavanje novog spritea
                                 print('Third stage white, new location: {}'.format(key))
                                 self.white_PLACE_Franka = key
@@ -894,7 +860,6 @@ class Game_Board():
                                 del self.white_positions_taken[white_piece.key]
                                 self.closed_positions[key] = position_on_board[key]
                                 self.white_positions_taken[key] = position_on_board[key]
-                                #print('Bijele zauzete pozicije: {}'.format(self.white_positions_taken.keys()))
                                 return True
 
             return False
@@ -908,7 +873,6 @@ class Game_Board():
             all_pieces_list.draw(self.screen)
             pygame.display.flip()
 
-            #print('Choose new location.')
             while True:
                 if mode == 2: new_location = input('Write new location: ')
                 else:
@@ -918,7 +882,6 @@ class Game_Board():
                 key, flag = self.check_position(position_on_board[new_location][0], position_on_board[new_location][1])
                 
                 if flag and key not in self.closed_positions:
-                    #print('Nova odabrana pozicija je: {}'.format(key))
                     black_piece.kill_it()
                     new_black = Black_Piece(key)
                     black_pieces_list.add(new_black)
@@ -933,7 +896,6 @@ class Game_Board():
                     del self.black_positions_taken[black_piece.key]
                     self.closed_positions[key] = position_on_board[key]
                     self.black_positions_taken[key] = position_on_board[key]
-                    #print('Crne zauzete pozicije: {}'.format(self.black_positions_taken.keys()))
                     return True
             
             return False
@@ -944,10 +906,7 @@ class Game_Board():
         mlin javljas samo ako je doslo do NOVO NAPRAVLJENOG MLINA
         zato cim naides na novi odma vracaj True jer nije moguce vise od jednog novog mlina
         '''
-        #print('usao')
-        #print(self.white_mill_dict_helper)
-        #print(self.black_mill_dict_helper)
-       
+        
         new_mill = False
 
         if player_color == WHITE:
@@ -978,7 +937,6 @@ class Game_Board():
             self.black_mill_dict = wmd
             self.black_mill_dict_helper = wmh
 
-        #print('Is there new mill? {}'.format(new_mill))
         return new_mill
 
 
@@ -1033,7 +991,6 @@ class Game_Board():
                                         del self.closed_positions[black_piece.key]
                                         del self.black_positions_taken[black_piece.key]
                                         self.BLACK_PIECES -= 1
-                                        #print('Preostalo crnih figura: {}'.format(self.BLACK_PIECES))
                                         is_killed = True
                                         break
 
@@ -1043,7 +1000,6 @@ class Game_Board():
                                         del self.closed_positions[black_piece.key]
                                         del self.black_positions_taken[black_piece.key]
                                         self.BLACK_PIECES -= 1
-                                        #print('Preostalo crnih figura: {}'.format(self.BLACK_PIECES))
                                         is_killed = True
                                         break
 
@@ -1068,7 +1024,6 @@ class Game_Board():
                             del self.closed_positions[black_piece.key]
                             del self.black_positions_taken[black_piece.key]
                             self.BLACK_PIECES -= 1
-                            #print('Preostalo crnih figura: {}'.format(self.BLACK_PIECES))
                             is_killed = True
                             break
 
@@ -1086,12 +1041,11 @@ class Game_Board():
 
                 for white_piece in white_pieces_list:
                     if white_piece.key == key:
-                        if all_in_mill:          # ?????????????????????????????????
+                        if all_in_mill:
                             white_piece.kill_it()
                             del self.closed_positions[white_piece.key]
                             del self.white_positions_taken[white_piece.key]
                             self.WHITE_PIECES -= 1
-                            #print('Preostalo bijelih figura: {}'.format(self.WHITE_PIECES))
                             is_killed = True
                             break
 
@@ -1100,7 +1054,6 @@ class Game_Board():
                             del self.closed_positions[white_piece.key]
                             del self.white_positions_taken[white_piece.key]
                             self.WHITE_PIECES -= 1
-                            #print('Preostalo bijelih figura: {}'.format(self.WHITE_PIECES))
                             is_killed = True
                             break
 
